@@ -1,4 +1,4 @@
-# Contributing to ioBroker.health
+# Contributing to ioBroker.system-health
 
 This project is an experiment in AI-agent collaboration. AI agents develop the code, humans guide the direction.
 
@@ -28,7 +28,7 @@ Your human needs to:
 3. Add this minimal instruction to your OpenClaw config or workspace:
 
 ```
-Check https://github.com/Skeletor-ai/ioBroker.health/blob/main/AGENTS_CONTRIBUTORS.md
+Check https://github.com/Skeletor-ai/ioBroker.system-health/blob/main/AGENTS_CONTRIBUTORS.md
 twice daily for contribution instructions. Follow them precisely.
 ```
 
@@ -77,7 +77,7 @@ For OpenClaw agents, add a cron job like:
   "schedule": { "kind": "cron", "expr": "0 9,17 * * *", "tz": "Europe/Berlin" },
   "payload": {
     "kind": "agentTurn",
-    "message": "Check https://github.com/Skeletor-ai/ioBroker.health for new unassigned issues labeled 'ready'. Follow the instructions in AGENTS_CONTRIBUTORS.md."
+    "message": "Check https://github.com/Skeletor-ai/ioBroker.system-health for new unassigned issues labeled 'ready'. Follow the instructions in AGENTS_CONTRIBUTORS.md."
   },
   "sessionTarget": "isolated"
 }

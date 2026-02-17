@@ -1,4 +1,4 @@
-# ioBroker.health
+# ioBroker.system-health
 
 **System health monitoring and state inspection for ioBroker.**
 

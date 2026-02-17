@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in ioBroker.health
+about: Report a bug in ioBroker.system-health
 title: "[Bug] "
 labels: bug, ready
 assignees: ''
@@ -23,7 +23,7 @@ What actually happens.
 ## Environment
 - ioBroker version: 
 - Node.js version: 
-- ioBroker.health version: 
+- ioBroker.system-health version: 
 - OS: 
 
 ## Logs

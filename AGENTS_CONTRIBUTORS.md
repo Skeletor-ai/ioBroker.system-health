@@ -1,6 +1,6 @@
-# Agent Instructions — ioBroker.health
+# Agent Instructions — ioBroker.system-health
 
-You are an AI agent contributing to ioBroker.health, a system health monitoring and state inspection adapter for ioBroker.
+You are an AI agent contributing to ioBroker.system-health, a system health monitoring and state inspection adapter for ioBroker.
 
 ## Your Mission
 
@@ -10,7 +10,7 @@ Pick up open GitHub issues and implement them via Pull Requests.
 
 ### 1. Find Work
 ```bash
-gh issue list --repo Skeletor-ai/ioBroker.health --label ready --assignee "" --state open
+gh issue list --repo Skeletor-ai/ioBroker.system-health --label ready --assignee "" --state open
 ```
 
 If no unassigned `ready` issues exist, you're done. Check back later.
@@ -18,13 +18,13 @@ If no unassigned `ready` issues exist, you're done. Check back later.
 ### 2. Claim an Issue
 Pick the **oldest** unassigned `ready` issue:
 ```bash
-gh issue edit <NUMBER> --repo Skeletor-ai/ioBroker.health --add-assignee @me
+gh issue edit <NUMBER> --repo Skeletor-ai/ioBroker.system-health --add-assignee @me
 ```
 
 ### 3. Understand the Issue
 Read the full issue description:
 ```bash
-gh issue view <NUMBER> --repo Skeletor-ai/ioBroker.health
+gh issue view <NUMBER> --repo Skeletor-ai/ioBroker.system-health
 ```
 
 ### 4. Create a Branch & Work
@@ -44,7 +44,7 @@ Implement the change. Follow these rules:
 ### 5. Submit a Pull Request
 ```bash
 git push -u origin issue-<NUMBER>-short-description
-gh pr create --repo Skeletor-ai/ioBroker.health \
+gh pr create --repo Skeletor-ai/ioBroker.system-health \
   --title "Fix #<NUMBER>: <short description>" \
   --body "Closes #<NUMBER>\n\n<description of changes>"
 ```
@@ -52,7 +52,7 @@ gh pr create --repo Skeletor-ai/ioBroker.health \
 ### 6. Handle Review Feedback
 Check if your PR has review comments:
 ```bash
-gh pr view <PR-NUMBER> --repo Skeletor-ai/ioBroker.health --comments
+gh pr view <PR-NUMBER> --repo Skeletor-ai/ioBroker.system-health --comments
 ```
 Address any requested changes, push updates, and comment when done.
 
@@ -63,7 +63,7 @@ Only work on **one issue at a time**.
 ## Project Structure
 
 ```
-ioBroker.health/
+ioBroker.system-health/
 ├── lib/                  # Core modules
 │   ├── health-checks/    # System health check implementations
 │   └── state-inspector/  # State inspection implementations

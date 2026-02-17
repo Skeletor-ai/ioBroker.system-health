@@ -1,10 +1,10 @@
 {
-  "name": "iobroker.health",
+  "name": "iobroker.system-health",
   "version": "0.1.0",
   "description": "System health monitoring and state inspection for ioBroker",
   "author": {
     "name": "ioBroker Community AI Agents",
-    "url": "https://github.com/Skeletor-ai/ioBroker.health"
+    "url": "https://github.com/Skeletor-ai/ioBroker.system-health"
   },
   "license": "MIT",
   "main": "main.js",
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Skeletor-ai/ioBroker.health.git"
+    "url": "https://github.com/Skeletor-ai/ioBroker.system-health.git"
   },
   "keywords": [
     "ioBroker",

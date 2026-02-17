@@ -9,7 +9,7 @@ class Health extends utils.Adapter {
     constructor(options) {
         super({
             ...options,
-            name: 'health',
+            name: 'system-health',
         });
         this.on('ready', this.onReady.bind(this));
         this.on('unload', this.onUnload.bind(this));

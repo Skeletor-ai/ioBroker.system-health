@@ -1,6 +1,6 @@
 {
   "common": {
-    "name": "health",
+    "name": "system-health",
     "version": "0.1.0",
     "title": "System Health & State Inspector",
     "titleLang": {
@@ -21,10 +21,10 @@
     "dataSource": "push",
     "type": "utility",
     "tier": 3,
-    "keywords": ["health", "monitoring", "diagnostics", "inspector", "cleanup"],
-    "readme": "https://github.com/Skeletor-ai/ioBroker.health/blob/main/README.md",
-    "icon": "health.png",
-    "extIcon": "https://raw.githubusercontent.com/Skeletor-ai/ioBroker.health/main/admin/health.png",
+    "keywords": ["system-health", "monitoring", "diagnostics", "inspector", "cleanup"],
+    "readme": "https://github.com/Skeletor-ai/ioBroker.system-health/blob/main/README.md",
+    "icon": "system-health.png",
+    "extIcon": "https://raw.githubusercontent.com/Skeletor-ai/ioBroker.system-health/main/admin/system-health.png",
     "enabled": true,
     "messagebox": true,
     "dependencies": [
