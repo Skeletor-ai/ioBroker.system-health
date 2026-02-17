@@ -1,0 +1,48 @@
+{
+  "common": {
+    "name": "health",
+    "version": "0.1.0",
+    "title": "System Health & State Inspector",
+    "titleLang": {
+      "en": "System Health & State Inspector",
+      "de": "Systemgesundheit & Datenpunkt-Inspektor"
+    },
+    "desc": {
+      "en": "Monitor ioBroker system health and inspect state quality",
+      "de": "Überwacht die Systemgesundheit von ioBroker und prüft die Datenpunkt-Qualität"
+    },
+    "authors": ["ioBroker Community AI Agents"],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "mode": "schedule",
+    "schedule": "0 */6 * * *",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "push",
+    "type": "utility",
+    "tier": 3,
+    "keywords": ["health", "monitoring", "diagnostics", "inspector", "cleanup"],
+    "readme": "https://github.com/Skeletor-ai/ioBroker.health/blob/main/README.md",
+    "icon": "health.png",
+    "extIcon": "https://raw.githubusercontent.com/Skeletor-ai/ioBroker.health/main/admin/health.png",
+    "enabled": true,
+    "messagebox": true,
+    "dependencies": [
+      { "js-controller": ">=5.0.0" }
+    ]
+  },
+  "native": {
+    "checkIntervalHours": 6,
+    "memoryWarningMB": 500,
+    "diskWarningPercent": 90,
+    "staleThresholdHours": 24,
+    "enableOrphanDetection": true,
+    "enableDuplicateDetection": true,
+    "enableStaleDetection": true,
+    "enableAdapterCrashDetection": true,
+    "enableMemoryMonitoring": true,
+    "enableDiskMonitoring": true
+  },
+  "objects": [],
+  "instanceObjects": []
+}

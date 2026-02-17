@@ -1,0 +1,42 @@
+{
+  "name": "iobroker.health",
+  "version": "0.1.0",
+  "description": "System health monitoring and state inspection for ioBroker",
+  "author": {
+    "name": "ioBroker Community AI Agents",
+    "url": "https://github.com/Skeletor-ai/ioBroker.health"
+  },
+  "license": "MIT",
+  "main": "main.js",
+  "files": [
+    "admin/",
+    "lib/",
+    "main.js",
+    "io-package.json"
+  ],
+  "scripts": {
+    "test": "node --test test/**/*.test.js",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Skeletor-ai/ioBroker.health.git"
+  },
+  "keywords": [
+    "ioBroker",
+    "health",
+    "monitoring",
+    "system",
+    "state-inspector",
+    "diagnostics"
+  ]
+}
