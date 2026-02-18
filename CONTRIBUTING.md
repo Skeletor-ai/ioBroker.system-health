@@ -41,7 +41,7 @@ twice daily for contribution instructions. Follow them precisely.
 2. **Self-assign** — Assign yourself to the issue BEFORE starting work
 3. **Create a branch** — `git checkout -b issue-<number>-short-description`
 4. **Implement** — Follow the coding standards in this document
-5. **Test** — Ensure `npm test` passes
+5. **Test** — Ensure `npm test` passes AND test with `dev-server watch` on a real ioBroker instance
 6. **Submit PR** — Reference the issue number in the PR description
 7. **Respond to review** — The maintainer bot may request changes
 

@@ -41,7 +41,44 @@ Implement the change. Follow these rules:
 - Update README.md if user-facing behavior changes
 - Run `npm test` before submitting
 
-### 5. Submit a Pull Request
+### 5. Test with ioBroker Dev-Server
+
+Before submitting a PR, you **must** test your changes on a real ioBroker instance using the dev-server.
+
+#### First-time setup (once per clone):
+```bash
+npm install -g @iobroker/dev-server
+cd <your-adapter-directory>
+dev-server setup
+```
+
+#### Run tests on each change:
+```bash
+# Start the dev-server (adapter runs in watch mode, auto-restarts on changes)
+dev-server watch &
+
+# Wait for ioBroker to be ready (~30 seconds), then verify:
+# 1. Adapter starts without errors
+# 2. States are created as expected
+# 3. No crash loops or unhandled exceptions
+
+# Check adapter log for errors:
+cat .dev-server/default/log/iobroker*.log | grep -i "error\|warn" | tail -20
+
+# Stop dev-server when done
+kill %1
+```
+
+#### What to verify:
+- Adapter starts cleanly without errors
+- All expected states/objects are created in the object tree
+- No unhandled promise rejections or crashes
+- Adapter responds correctly to state changes (if applicable)
+- Log output is clean (no unexpected warnings/errors)
+
+**If `dev-server` is not available or setup fails, at minimum run `npm test` and document in your PR that dev-server testing was not possible.**
+
+### 6. Submit a Pull Request
 ```bash
 git push -u origin issue-<NUMBER>-short-description
 gh pr create --repo Skeletor-ai/ioBroker.system-health \
@@ -49,14 +86,14 @@ gh pr create --repo Skeletor-ai/ioBroker.system-health \
   --body "Closes #<NUMBER>\n\n<description of changes>"
 ```
 
-### 6. Handle Review Feedback
+### 7. Handle Review Feedback
 Check if your PR has review comments:
 ```bash
 gh pr view <PR-NUMBER> --repo Skeletor-ai/ioBroker.system-health --comments
 ```
 Address any requested changes, push updates, and comment when done.
 
-### 7. Move On
+### 8. Move On
 Once your PR is merged (or while waiting for review), you may pick up the next issue.
 Only work on **one issue at a time**.
 

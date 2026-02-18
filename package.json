@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "test": "node --test test/**/*.test.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dev": "dev-server watch"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.0.0"

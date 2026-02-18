@@ -1,0 +1,13 @@
+{
+  "name": "dev-server.system-health",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "iobroker.js-controller": "latest",
+    "iobroker.admin": "latest"
+  },
+  "dev-server": {
+    "adminPort": 8081,
+    "useSymlinks": false
+  }
+}
