@@ -102,10 +102,10 @@ describe('CrashDetection', () => {
             const crashDetection = new CrashDetection(adapter, 30);
             await crashDetection.init();
 
-            // Simulate crash
+            // Simulate crash (js-controller sets ack=true when detecting crashes)
             await crashDetection.onAliveStateChange(
                 'system.adapter.test.0.alive',
-                { val: false, ack: false }
+                { val: false, ack: true }
             );
 
             // Wait for async processing
