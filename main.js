@@ -2,6 +2,8 @@
 
 const utils = require('@iobroker/adapter-core');
 const MemoryMonitor = require('./lib/health-checks/memory-monitor');
+const CpuMonitor = require('./lib/health-checks/cpu-monitor');
+const DiskMonitor = require('./lib/health-checks/disk-monitor');
 
 class Health extends utils.Adapter {
     /**
@@ -15,6 +17,8 @@ class Health extends utils.Adapter {
         this.on('ready', this.onReady.bind(this));
         this.on('unload', this.onUnload.bind(this));
         this.memoryMonitor = null;
+        this.cpuMonitor = null;
+        this.diskMonitor = null;
     }
 
     async onReady() {
@@ -141,9 +145,18 @@ class Health extends utils.Adapter {
             await this.runMemoryCheck();
         }
 
+        // CPU monitoring
+        if (config.enableCpuMonitoring) {
+            await this.runCpuCheck();
+        }
+
+        // Disk space monitoring
+        if (config.enableDiskMonitoring) {
+            await this.runDiskCheck();
+        }
+
         // TODO: Other health checks
         // - Adapter crash detection
-        // - Disk space monitoring
         // - Stale state detection
         // - Orphaned state detection
         // - Duplicate state detection
@@ -195,6 +208,45 @@ class Health extends utils.Adapter {
         if (result.topProcesses && result.topProcesses.length > 0) {
             this.log.debug(`Top memory consumers: ${result.topProcesses.map(p => `${p.command} (${p.memPercent}%)`).join(', ')}`);
         }
+    }
+
+    /**
+     * Run CPU monitoring check.
+     */
+    async runCpuCheck() {
+        if (!this.cpuMonitor) {
+            this.cpuMonitor = new CpuMonitor(this, {
+                warningThreshold: this.config.cpuWarningPercent || 70,
+                criticalThreshold: this.config.cpuCriticalPercent || 90,
+                sampleCount: this.config.cpuSampleCount || 5,
+            });
+            await this.cpuMonitor.init();
+        }
+
+        await this.cpuMonitor.measure();
+
+        this.log.info('CPU check completed.');
+    }
+
+    /**
+     * Run disk space monitoring check.
+     */
+    async runDiskCheck() {
+        if (!this.diskMonitor) {
+            this.diskMonitor = new DiskMonitor(this, {
+                warningThresholdPercent: this.config.diskWarningPercent || 80,
+                criticalThresholdPercent: this.config.diskCriticalPercent || 90,
+                warningThresholdMB: this.config.diskWarningMB || 1000,
+                criticalThresholdMB: this.config.diskCriticalMB || 500,
+                mountPoints: this.config.diskMountPoints || ['/'],
+                historySize: 10,
+            });
+            await this.diskMonitor.init();
+        }
+
+        await this.diskMonitor.measure();
+
+        this.log.info('Disk check completed.');
     }
 
     /**
