@@ -8,8 +8,9 @@
 
 ### System Health Monitoring
 - **Memory usage monitoring** — Track RAM usage, detect memory leaks, and receive alerts when thresholds are exceeded
+- **CPU monitoring** — Monitor CPU load with sustained high-load detection and top process reporting
+- **Disk space monitoring** — Track disk usage with trend analysis and low-space alerts
 - Adapter crash detection and restart tracking *(planned)*
-- CPU and disk space alerts *(planned)*
 - Stale state detection (states not updated within expected intervals) *(planned)*
 - ioBroker instance health overview *(planned)*
 
@@ -36,6 +37,22 @@ Configuration is done through the ioBroker admin interface.
 - **Enable memory monitoring** — Toggle memory usage checks
 - **Warning threshold (MB)** — Alert when used memory exceeds this value (default: 500 MB)
 - **Check interval** — How often to run health checks (configured globally, default: every 6 hours)
+
+### CPU Monitoring Settings
+
+- **Enable CPU monitoring** — Toggle CPU usage checks
+- **Warning threshold (%)** — Alert when CPU usage exceeds this percentage (default: 70%)
+- **Critical threshold (%)** — Critical alert threshold (default: 90%)
+- **Sample count** — Number of samples for sustained load detection (default: 5)
+
+### Disk Space Monitoring Settings
+
+- **Enable disk monitoring** — Toggle disk space checks
+- **Warning threshold (%)** — Alert when disk usage exceeds this percentage (default: 80%)
+- **Critical threshold (%)** — Critical alert threshold (default: 90%)
+- **Warning threshold (MB free)** — Alert when free space drops below this value (default: 1000 MB)
+- **Critical threshold (MB free)** — Critical alert threshold (default: 500 MB)
+- **Mount points** — Array of mount points to monitor (default: `["/"]` on Linux/macOS)
 
 ## Usage
 
@@ -69,6 +86,51 @@ The adapter analyzes the last 10 memory samples and detects a potential leak whe
 - More than 70% of samples show positive growth
 
 This indicates a consistent upward trend rather than normal fluctuations.
+
+### CPU Monitoring
+
+When enabled, the adapter:
+- Measures overall CPU usage and per-core utilization
+- Detects sustained high CPU load (not just temporary spikes)
+- Reports top CPU-consuming processes when thresholds are exceeded
+- Configurable warning and critical thresholds
+
+#### States Created
+
+- `system-health.0.cpu.usage` — Average CPU usage (%)
+- `system-health.0.cpu.usagePerCore` — JSON array with per-core usage
+- `system-health.0.cpu.status` — Overall status (`ok`, `warning`, `critical`)
+- `system-health.0.cpu.sustainedHighLoad` — Boolean flag for sustained high load
+- `system-health.0.cpu.warnings` — Human-readable warnings
+- `system-health.0.cpu.topProcesses` — JSON array of top CPU-consuming processes
+
+#### Sustained Load Detection
+
+The adapter monitors CPU usage over multiple samples (default: 5) and only triggers sustained-load alerts when **all recent samples** exceed the warning threshold. This prevents false alarms from temporary spikes.
+
+### Disk Space Monitoring
+
+When enabled, the adapter:
+- Monitors free and used space for configured mount points
+- Tracks disk usage trends (growth rate)
+- Estimates time until disk full based on growth rate
+- Configurable thresholds (both percentage and absolute free space)
+
+#### States Created
+
+- `system-health.0.disk.partitions` — JSON array with info for all monitored partitions
+- `system-health.0.disk.status` — Overall status (`ok`, `warning`, `critical`)
+- `system-health.0.disk.warnings` — Human-readable warnings with trend data
+- `system-health.0.disk.trends` — JSON object with growth rates and ETAs per partition
+- `system-health.0.disk.history` — Internal state for trend tracking (persisted)
+
+#### Trend Analysis
+
+The adapter maintains historical data for each monitored partition (last 10 samples) and calculates:
+- **Growth rate** (MB per hour) — how fast disk usage is increasing
+- **ETA** (estimated time until full) — projected date/time when disk will run out of space
+
+If a partition is growing faster than 100 MB/hour and has an ETA, a trend warning is included in the alerts.
 
 ## How This Project Works
 
