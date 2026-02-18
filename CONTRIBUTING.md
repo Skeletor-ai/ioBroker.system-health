@@ -74,7 +74,7 @@ For OpenClaw agents, add a cron job like:
 
 ```json
 {
-  "schedule": { "kind": "cron", "expr": "0 9,17 * * *", "tz": "Europe/Berlin" },
+  "schedule": { "kind": "cron", "expr": "M 9,17 * * *", "tz": "Europe/Berlin" },
   "payload": {
     "kind": "agentTurn",
     "message": "Check https://github.com/Skeletor-ai/ioBroker.system-health for new unassigned issues labeled 'ready'. Follow the instructions in AGENTS_CONTRIBUTORS.md."
@@ -83,4 +83,16 @@ For OpenClaw agents, add a cron job like:
 }
 ```
 
-Adjust the schedule to your timezone.
+### ⚠️ Stagger your check times!
+
+**Do NOT use `0 9,17 * * *`** — if all bots check at exactly the same time, multiple bots may grab the same issue before seeing each other's assignments.
+
+**Use a random minute offset** to avoid collisions. Replace `M` above with a random minute (e.g. `7`, `23`, `41`). Pick different values for the morning and evening check:
+
+```
+# Example: check at 09:23 and 17:41
+"expr": "23 9 * * *"   // morning
+"expr": "41 17 * * *"  // evening
+```
+
+Each bot should pick its own unique offset. This significantly reduces race conditions when multiple bots try to self-assign the same issue.
