@@ -8,6 +8,7 @@
 
 ### System Health Monitoring
 
+
 #### Adapter Crash Detection and Restart Tracking
 - **Real-time monitoring**: Detects adapter crashes within 60 seconds
 - **Crash history**: Tracks all crashes with timestamps for the last 30 days
@@ -30,7 +31,7 @@
 - Track disk usage with trend analysis and low-space alerts
 
 #### Other Health Checks (Coming Soon)
-- Stale state detection (states not updated within expected intervals)
+- **Stale state detection** — Monitor states for expected update intervals and alert when they become stale
 - ioBroker instance health overview
 
 ### State Inspector (Coming Soon)
@@ -182,6 +183,60 @@ You can use these states in scripts, blockly, or notification adapters to get al
 ### Daemon Mode
 
 **Note**: Crash detection requires the adapter to run in `daemon` mode to continuously monitor alive states. The default `schedule` mode is suitable for periodic health checks but will not detect crashes in real-time. Enable crash detection in the adapter settings to automatically switch to daemon mode.
+
+### Stale State Detection
+
+The adapter can monitor configured states and alert when they haven't been updated within their expected intervals, indicating potential device or adapter failures.
+
+**Features:**
+- Watch specific states with configurable expected update intervals
+- Grace period before alerting (prevents false alarms)
+- Distinguish between legitimately unchanging states and actual failures
+- Per-state configuration (interval + grace period)
+- Real-time detection via state subscriptions
+
+#### States Created
+
+- `system-health.0.staleStates.list` — JSON array of currently stale states with details
+- `system-health.0.staleStates.count` — Number of stale states
+- `system-health.0.staleStates.hasStale` — Boolean alarm indicator
+
+#### Configuration
+
+Stale state detection requires configuration via adapter settings. For each watched state, specify:
+- **State ID** — The full ioBroker state ID to monitor (e.g., `zigbee.0.living-room-sensor.temperature`)
+- **Expected interval** (seconds) — How often the state should update under normal conditions
+- **Grace period** (seconds) — Additional time before alerting (default: 60s)
+
+**Example:**
+```json
+{
+  "watchedStates": [
+    {
+      "id": "zigbee.0.living-room-sensor.temperature",
+      "intervalSeconds": 300,
+      "gracePeriodSeconds": 60
+    },
+    {
+      "id": "modbus.0.power-meter.consumption",
+      "intervalSeconds": 60,
+      "gracePeriodSeconds": 30
+    }
+  ]
+}
+```
+
+In this example:
+- The temperature sensor is expected to update every 5 minutes (300s). If it doesn't update for 6 minutes (300s + 60s grace), it's flagged as stale.
+- The power meter should update every minute. If it misses an update by more than 30 seconds, it's flagged.
+
+#### Staleness Logic
+
+A state is considered **stale** when:
+1. It hasn't been updated within `intervalSeconds + gracePeriodSeconds`, OR
+2. It has never been updated since monitoring started
+
+The grace period prevents false alarms due to minor timing variations or temporary network hiccups.
 
 ## How This Project Works
 
