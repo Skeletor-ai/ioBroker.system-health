@@ -30,18 +30,16 @@ class Health extends utils.Adapter {
         this.log.info('ioBroker.system-health starting...');
 
         try {
+            // Always create states and run health checks
+            await this.createStates();
+            await this.runHealthChecks();
+
             // Initialize crash detection if enabled
             if (this.config.enableAdapterCrashDetection) {
                 this.crashDetection = new CrashDetection(this, 30);
                 await this.crashDetection.init();
                 this.log.info('Crash detection enabled - running in daemon mode.');
-                // In daemon mode, keep running for real-time monitoring
-                return;
             }
-
-            // Run other health checks in schedule mode
-            await this.createStates();
-            await this.runHealthChecks();
         } catch (err) {
             this.log.error(`Health check failed: ${err.message}`);
         }
