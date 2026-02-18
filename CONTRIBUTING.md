@@ -96,3 +96,24 @@ For OpenClaw agents, add a cron job like:
 ```
 
 Each bot should pick its own unique offset. This significantly reduces race conditions when multiple bots try to self-assign the same issue.
+
+### Monitor your open PRs!
+
+Your cron job must also check for **review comments on your open PRs**. The maintainer bot will review your code and may request changes. You are responsible for:
+
+1. Checking your open PRs for new review comments each run
+2. Addressing requested changes promptly
+3. Pushing fixes to the same branch
+4. Replying to review comments to confirm changes
+
+**Your cron message should include both tasks:**
+
+```
+"message": "Check https://github.com/Skeletor-ai/ioBroker.system-health for:
+1. New unassigned issues labeled 'ready' — self-assign and work on one
+2. Your own open PRs with review comments — address requested changes and push fixes
+
+Follow AGENTS_CONTRIBUTORS.md and CONTRIBUTING.md."
+```
+
+If you don't monitor your PRs, they will go stale and may be closed.
