@@ -30,12 +30,22 @@
 #### Disk Space Monitoring
 - Track disk usage with trend analysis and low-space alerts
 
+#### Stale State Detection
+- Monitor states for expected update intervals and alert when they become stale
+
 #### Other Health Checks (Coming Soon)
-- **Stale state detection** — Monitor states for expected update intervals and alert when they become stale
 - ioBroker instance health overview
 
-### State Inspector (Coming Soon)
+### State Inspector
+
+#### Orphaned State Detection
 - Find orphaned states (no adapter, no references)
+- Categorize orphans: adapter removed, adapter disabled, unreferenced
+- Configurable ignore list for system states
+- Cleanup suggestions (report-only, no auto-deletion)
+- Dashboard-friendly states with counts and categories
+
+#### Coming Soon
 - Detect duplicate data points
 - Identify unused objects and dead references
 - Visualize adapter dependencies
@@ -237,6 +247,63 @@ A state is considered **stale** when:
 2. It has never been updated since monitoring started
 
 The grace period prevents false alarms due to minor timing variations or temporary network hiccups.
+
+### Orphaned State Detection
+
+The State Inspector identifies orphaned states — states without a running adapter or that are not referenced anywhere in your system.
+
+**Features:**
+- Detect states from removed adapters
+- Detect states from disabled adapters
+- Identify unreferenced states (not used in scripts, vis, automations)
+- Categorize orphans by type (adapter removed, disabled, unreferenced)
+- Group orphans by adapter for easy cleanup
+- Configurable ignore list (e.g., skip system states)
+- Report-only mode: no automatic deletion
+
+#### States Created
+
+- `system-health.0.inspector.orphanedStates.report` — Full JSON report with all orphaned states
+- `system-health.0.inspector.orphanedStates.count` — Total number of orphaned states
+- `system-health.0.inspector.orphanedStates.hasOrphans` — Boolean indicator
+- `system-health.0.inspector.orphanedStates.byCategory` — Breakdown by category (JSON)
+
+#### Orphan Categories
+
+**adapter_removed**  
+States whose adapter has been uninstalled. These are usually safe to delete.
+
+**adapter_disabled**  
+States from adapters that are installed but disabled. Review before deleting — the adapter might be re-enabled later.
+
+**unreferenced**  
+States from running adapters that aren't referenced in any scripts, visualizations, or automations. Review carefully — they might be used in ways the inspector can't detect.
+
+#### Configuration
+
+Configure an ignore list to exclude certain state patterns from detection:
+
+```json
+{
+  "ignoreList": [
+    "system.*",
+    "admin.*",
+    "*.info.*"
+  ]
+}
+```
+
+Supports simple wildcard patterns (`*` matches any text).
+
+#### Cleanup Suggestions
+
+The inspector provides cleanup suggestions based on orphan category:
+
+- **Safe to delete:** States from removed adapters
+- **Review required:** States from disabled adapters or unreferenced states
+- **Keep for now:** States matching ignore patterns
+
+**Important:** The adapter never deletes states automatically. Use the report to make informed cleanup decisions in the ioBroker admin UI.
 
 ## How This Project Works
 
