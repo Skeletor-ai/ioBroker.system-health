@@ -5,6 +5,7 @@ const MemoryMonitor = require('./lib/health-checks/memory-monitor');
 const CpuMonitor = require('./lib/health-checks/cpu-monitor');
 const DiskMonitor = require('./lib/health-checks/disk-monitor');
 const CrashDetection = require('./lib/health-checks/crash-detection');
+const DuplicateStateInspector = require('./lib/state-inspector/duplicate-detection');
 
 class Health extends utils.Adapter {
     /**
@@ -24,6 +25,9 @@ class Health extends utils.Adapter {
         
         /** @type {CrashDetection|null} */
         this.crashDetection = null;
+        
+        /** @type {DuplicateStateInspector|null} */
+        this.duplicateInspector = null;
     }
 
     async onReady() {
@@ -181,10 +185,14 @@ class Health extends utils.Adapter {
             await this.runDiskCheck();
         }
 
+        // State inspector checks
+        if (config.enableDuplicateDetection) {
+            await this.runDuplicateDetection();
+        }
+
         // TODO: Other health checks
         // - Stale state detection
         // - Orphaned state detection
-        // - Duplicate state detection
 
         this.log.info('Health checks completed.');
     }
@@ -275,12 +283,34 @@ class Health extends utils.Adapter {
     }
 
     /**
+     * Run duplicate state detection.
+     */
+    async runDuplicateDetection() {
+        if (!this.duplicateInspector) {
+            const threshold = this.config.duplicateSimilarityThreshold || 0.9;
+            this.duplicateInspector = new DuplicateStateInspector(this, threshold);
+            await this.duplicateInspector.init();
+        }
+
+        const duplicates = await this.duplicateInspector.scan();
+
+        if (duplicates.length > 0) {
+            this.log.warn(`Found ${duplicates.length} duplicate state groups`);
+        } else {
+            this.log.info('No duplicate states detected');
+        }
+    }
+
+    /**
      * @param {() => void} callback
      */
     async onUnload(callback) {
         try {
             if (this.crashDetection) {
                 await this.crashDetection.cleanup();
+            }
+            if (this.duplicateInspector) {
+                await this.duplicateInspector.stop();
             }
             this.log.info('ioBroker.system-health stopped.');
             callback();
