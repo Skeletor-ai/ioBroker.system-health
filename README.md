@@ -45,8 +45,15 @@
 - Cleanup suggestions (report-only, no auto-deletion)
 - Dashboard-friendly states with counts and categories
 
+#### Duplicate State Detection
+- Detect data points with identical values across different adapters
+- Identify naming pattern duplicates (similar state names, e.g., same device from multiple adapters)
+- Report includes staleness information (last-updated timestamps)
+- Configurable similarity threshold for naming detection (default: 0.9)
+- Automatic confidence scoring (high/medium)
+- Results available as JSON report in adapter states
+
 #### Coming Soon
-- Detect duplicate data points
 - Identify unused objects and dead references
 - Visualize adapter dependencies
 - Cleanup suggestions with safe removal
@@ -83,6 +90,14 @@ Configuration is done through the ioBroker admin interface.
 - **Warning threshold (MB free)** — Alert when free space drops below this value (default: 1000 MB)
 - **Critical threshold (MB free)** — Critical alert threshold (default: 500 MB)
 - **Mount points** — Array of mount points to monitor (default: `["/"]` on Linux/macOS)
+
+### State Inspector Settings
+
+- **Enable orphan detection** — Identify orphaned states (default: true)
+- **Enable duplicate detection** — Detect duplicate data points (default: true)
+- **Duplicate similarity threshold** — Threshold for naming pattern detection, 0-1 (default: 0.9)
+- **Enable stale detection** — Monitor states for staleness (default: true)
+- **Stale threshold (hours)** — Default threshold for stale state detection (default: 24)
 
 ## Usage
 
@@ -304,6 +319,87 @@ The inspector provides cleanup suggestions based on orphan category:
 - **Keep for now:** States matching ignore patterns
 
 **Important:** The adapter never deletes states automatically. Use the report to make informed cleanup decisions in the ioBroker admin UI.
+
+### Duplicate State Detection
+
+The State Inspector identifies duplicate data points — states with identical values or similar naming patterns that may indicate redundant sensors or adapters monitoring the same entity.
+
+**Features:**
+- Detect states with identical values across different adapters (value-based duplicates)
+- Identify naming pattern duplicates using Levenshtein similarity (e.g., `hm-rpc.0.device.temperature` and `hm-rpc.0.device.temperatur`)
+- Report includes staleness information to identify outdated duplicates
+- Configurable similarity threshold for naming detection (0-1, default: 0.9)
+- Automatic confidence scoring (high/medium) based on update frequency
+- Merge and deduplicate results to avoid overlap between detection methods
+- System and admin states are automatically excluded
+
+**Configuration:**
+- `enableDuplicateDetection` — Enable/disable duplicate detection (default: true)
+- `duplicateSimilarityThreshold` — Similarity threshold for naming pattern detection (0-1, default: 0.9)
+
+#### States Created
+
+- `system-health.0.inspector.duplicates.report` — Full JSON report with duplicate groups
+- `system-health.0.inspector.duplicates.count` — Number of duplicate groups found
+- `system-health.0.inspector.duplicates.lastScan` — Timestamp of last scan
+
+#### Duplicate Types
+
+**Value Duplicates**  
+States with identical values, type, and unit. Example: Two temperature sensors from different adapters reporting the exact same value (21.5°C) could indicate they're monitoring the same physical location.
+
+**Naming Duplicates**  
+States with similar names and properties. Example: `zigbee.0.room.temperature` and `hm-rpc.0.room.temp` might be the same sensor integrated via two different protocols.
+
+#### Report Structure
+
+```json
+{
+  "timestamp": 1709194800000,
+  "duplicateGroups": 2,
+  "totalDuplicateStates": 5,
+  "duplicates": [
+    {
+      "type": "value",
+      "reason": "Identical value across multiple states",
+      "value": 21.5,
+      "dataType": "number",
+      "unit": "°C",
+      "confidence": "high",
+      "states": [
+        {
+          "id": "hm-rpc.0.livingroom.temperature",
+          "name": "Living Room Temperature",
+          "lastChanged": 1709194200000,
+          "isStale": false
+        },
+        {
+          "id": "zigbee.0.livingroom.temp",
+          "name": "Living Room Temp",
+          "lastChanged": 1709194150000,
+          "isStale": false
+        }
+      ]
+    },
+    {
+      "type": "naming",
+      "reason": "Similar naming pattern detected",
+      "pattern": "hm-rpc.0.device123.*",
+      "confidence": "medium",
+      "states": [...]
+    }
+  ]
+}
+```
+
+#### Use Cases
+
+- **Consolidation:** Identify redundant integrations of the same device
+- **Cleanup:** Find duplicate sensors that should be removed
+- **Troubleshooting:** Detect misconfigured adapters creating duplicate data points
+- **Optimization:** Reduce storage and processing overhead from redundant states
+
+**Important:** Duplicates are not automatically removed. Review the report to determine which states to keep and which to remove.
 
 ## How This Project Works
 

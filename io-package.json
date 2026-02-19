@@ -37,6 +37,7 @@
     "staleThresholdHours": 24,
     "enableOrphanDetection": true,
     "enableDuplicateDetection": true,
+    "duplicateSimilarityThreshold": 0.9,
     "enableStaleDetection": true,
     "enableAdapterCrashDetection": true,
     "enableMemoryMonitoring": true,
