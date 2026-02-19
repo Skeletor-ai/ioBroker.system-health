@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background -->
+  <rect width="100" height="100" fill="#2196F3"/>
+  
+  <!-- Heart symbol (health) -->
+  <path d="M50 75 L20 45 Q15 35, 25 25 T50 35 T75 25 Q85 35, 80 45 Z" fill="white"/>
+  
+  <!-- Plus symbol -->
+  <rect x="45" y="15" width="10" height="30" fill="white" rx="2"/>
+  <rect x="35" y="25" width="30" height="10" fill="white" rx="2"/>
+</svg>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>System Health Configuration</title>
+    
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" type="text/css" href="../../css/adapter.css"/>
+    <link rel="stylesheet" type="text/css" href="../../lib/css/materialize.css">
+    
+    <!-- ioBroker scripts -->
+    <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="../../js/translate.js"></script>
+    <script type="text/javascript" src="../../lib/js/materialize.js"></script>
+    <script type="text/javascript" src="../../js/adapter-settings.js"></script>
+    
+    <script type="text/javascript">
+        function load(settings, onChange) {
+            if (!settings) return;
+            
+            // Load settings into UI
+            $('.value').each(function () {
+                const $this = $(this);
+                const id = $this.attr('id');
+                
+                if ($this.attr('type') === 'checkbox') {
+                    $this.prop('checked', settings[id])
+                        .on('change', function() {
+                            onChange();
+                        });
+                } else {
+                    $this.val(settings[id])
+                        .on('change', onChange)
+                        .on('keyup', onChange);
+                }
+            });
+            
+            onChange(false);
+            M.updateTextFields();
+        }
+        
+        function save(callback) {
+            const obj = {};
+            
+            $('.value').each(function () {
+                const $this = $(this);
+                const id = $this.attr('id');
+                
+                if ($this.attr('type') === 'checkbox') {
+                    obj[id] = $this.prop('checked');
+                } else {
+                    obj[id] = $this.val();
+                }
+            });
+            
+            callback(obj);
+        }
+    </script>
+    
+    <style>
+        .section-header {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #2196F3;
+        }
+        
+        .input-field {
+            margin-bottom: 20px;
+        }
+        
+        .helper-text {
+            font-size: 0.85rem;
+            color: #757575;
+            margin-top: -15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="m adapter-container">
+        
+        <div class="row">
+            <div class="col s12">
+                <h5 class="translate">System Health Configuration</h5>
+            </div>
+        </div>
+        
+        <!-- General Settings -->
+        <div class="row">
+            <div class="col s12">
+                <div class="section-header translate">General Settings</div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <div class="input-field">
+                    <input type="number" class="value" id="checkIntervalHours" min="1" max="168"/>
+                    <label for="checkIntervalHours" class="translate">Check interval (hours)</label>
+                </div>
+                <div class="helper-text translate">How often to run health checks (1-168 hours)</div>
+            </div>
+        </div>
+        
+        <!-- Memory Monitoring -->
+        <div class="row">
+            <div class="col s12">
+                <div class="section-header translate">Memory Monitoring</div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <p>
+                    <label>
+                        <input type="checkbox" class="value filled-in" id="enableMemoryMonitoring"/>
+                        <span class="translate">Enable memory monitoring</span>
+                    </label>
+                </p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <div class="input-field">
+                    <input type="number" class="value" id="memoryWarningMB" min="100" max="100000"/>
+                    <label for="memoryWarningMB" class="translate">Memory warning threshold (MB)</label>
+                </div>
+                <div class="helper-text translate">Alert when free memory drops below this value</div>
+            </div>
+        </div>
+        
+        <!-- Disk Monitoring -->
+        <div class="row">
+            <div class="col s12">
+                <div class="section-header translate">Disk Monitoring</div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <p>
+                    <label>
+                        <input type="checkbox" class="value filled-in" id="enableDiskMonitoring"/>
+                        <span class="translate">Enable disk monitoring</span>
+                    </label>
+                </p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <div class="input-field">
+                    <input type="number" class="value" id="diskWarningPercent" min="50" max="99"/>
+                    <label for="diskWarningPercent" class="translate">Disk warning threshold (%)</label>
+                </div>
+                <div class="helper-text translate">Alert when disk usage exceeds this percentage</div>
+            </div>
+        </div>
+        
+        <!-- Crash Detection -->
+        <div class="row">
+            <div class="col s12">
+                <div class="section-header translate">Adapter Crash Detection</div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <p>
+                    <label>
+                        <input type="checkbox" class="value filled-in" id="enableAdapterCrashDetection"/>
+                        <span class="translate">Enable adapter crash detection</span>
+                    </label>
+                </p>
+            </div>
+        </div>
+        
+        <!-- State Inspector -->
+        <div class="row">
+            <div class="col s12">
+                <div class="section-header translate">State Inspector</div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <p>
+                    <label>
+                        <input type="checkbox" class="value filled-in" id="enableOrphanDetection"/>
+                        <span class="translate">Enable orphaned state detection</span>
+                    </label>
+                </p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <p>
+                    <label>
+                        <input type="checkbox" class="value filled-in" id="enableDuplicateDetection"/>
+                        <span class="translate">Enable duplicate state detection</span>
+                    </label>
+                </p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <div class="input-field">
+                    <input type="number" class="value" id="duplicateSimilarityThreshold" min="0.5" max="1.0" step="0.05"/>
+                    <label for="duplicateSimilarityThreshold" class="translate">Duplicate similarity threshold</label>
+                </div>
+                <div class="helper-text translate">How similar state names must be to be flagged (0.5-1.0)</div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <p>
+                    <label>
+                        <input type="checkbox" class="value filled-in" id="enableStaleDetection"/>
+                        <span class="translate">Enable stale state detection</span>
+                    </label>
+                </p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col s12 m6">
+                <div class="input-field">
+                    <input type="number" class="value" id="staleThresholdHours" min="1" max="720"/>
+                    <label for="staleThresholdHours" class="translate">Stale threshold (hours)</label>
+                </div>
+                <div class="helper-text translate">Consider states stale if not updated within this time</div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
