@@ -1,4 +1,5 @@
-{
+// eslint-disable-next-line no-unused-vars
+var systemDictionary = {
     "en": {
         "System Health Configuration": "System Health Configuration",
         "General Settings": "General Settings",
@@ -47,4 +48,4 @@
         "Stale threshold (hours)": "Veraltet-Schwelle (Stunden)",
         "Consider states stale if not updated within this time": "Datenpunkte als veraltet markieren wenn nicht innerhalb dieser Zeit aktualisiert"
     }
-}
+};
