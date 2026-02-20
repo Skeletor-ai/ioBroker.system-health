@@ -22,8 +22,8 @@
     "tier": 3,
     "keywords": ["system-health", "monitoring", "diagnostics", "inspector", "cleanup"],
     "readme": "https://github.com/Skeletor-ai/ioBroker.system-health/blob/main/README.md",
-    "icon": "system-health.png",
-    "extIcon": "https://raw.githubusercontent.com/Skeletor-ai/ioBroker.system-health/main/admin/system-health.png",
+    "icon": "system-health.svg",
+    "extIcon": "https://raw.githubusercontent.com/Skeletor-ai/ioBroker.system-health/main/admin/system-health.svg",
     "enabled": true,
     "messagebox": true,
     "dependencies": [

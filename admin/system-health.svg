@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2E7D32;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Heart shape -->
+  <path d="M50,85 C50,85 15,60 15,40 C15,25 25,15 35,15 C42,15 47,20 50,25 C53,20 58,15 65,15 C75,15 85,25 85,40 C85,60 50,85 50,85 Z" 
+        fill="url(#heartGradient)" 
+        stroke="#1B5E20" 
+        stroke-width="2"/>
+  
+  <!-- EKG/Pulse line -->
+  <polyline points="20,45 30,45 35,30 40,60 45,45 55,45 60,35 65,55 70,45 80,45" 
+            fill="none" 
+            stroke="#FFF" 
+            stroke-width="3" 
+            stroke-linecap="round" 
+            stroke-linejoin="round"/>
+  
+  <!-- Small shield icon for "system" aspect -->
+  <path d="M50,20 L55,17 L55,25 L50,28 L45,25 L45,17 Z" 
+        fill="#81C784" 
+        stroke="#1B5E20" 
+        stroke-width="1"/>
+</svg>
