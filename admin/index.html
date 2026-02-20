@@ -12,6 +12,50 @@
     <script type="text/javascript" src="../../lib/js/materialize.js"></script>
     <script type="text/javascript" src="../../js/adapter-settings.js"></script>
     <script type="text/javascript" src="words.js"></script>
+    
+    <script type="text/javascript">
+        function load(settings, onChange) {
+            if (!settings) return;
+            
+            // Load settings into UI
+            $('.value').each(function () {
+                const $this = $(this);
+                const id = $this.attr('id');
+                
+                if ($this.attr('type') === 'checkbox') {
+                    $this.prop('checked', settings[id])
+                        .on('change', function() {
+                            onChange();
+                        });
+                } else {
+                    $this.val(settings[id])
+                        .on('change', onChange)
+                        .on('keyup', onChange);
+                }
+            });
+            
+            onChange(false);
+            M.updateTextFields();
+        }
+        
+        function save(callback) {
+            const obj = {};
+            
+            $('.value').each(function () {
+                const $this = $(this);
+                const id = $this.attr('id');
+                
+                if ($this.attr('type') === 'checkbox') {
+                    obj[id] = $this.prop('checked');
+                } else {
+                    obj[id] = $this.val();
+                }
+            });
+            
+            callback(obj);
+        }
+    </script>
+    
     <style>
         .m .col .select-wrapper+label {
             top: -26px;
