@@ -28,6 +28,9 @@ class Health extends utils.Adapter {
         
         /** @type {DuplicateStateInspector|null} */
         this.duplicateInspector = null;
+        
+        /** @type {NodeJS.Timeout|null} */
+        this.healthCheckInterval = null;
     }
 
     async onReady() {
@@ -44,6 +47,25 @@ class Health extends utils.Adapter {
                 await this.crashDetection.init();
                 this.log.info('Crash detection enabled - running in daemon mode.');
             }
+            
+            // Start periodic health checks
+            let intervalMinutes = this.config.healthCheckIntervalMinutes || 5;
+            if (intervalMinutes < 1 || intervalMinutes > 60) {
+                this.log.warn(`Invalid healthCheckIntervalMinutes: ${intervalMinutes}. Using default: 5`);
+                intervalMinutes = 5;
+            }
+            
+            const intervalMs = intervalMinutes * 60 * 1000;
+            this.healthCheckInterval = setInterval(async () => {
+                this.log.debug(`Running periodic health checks (interval: ${intervalMinutes} min)...`);
+                try {
+                    await this.runHealthChecks();
+                } catch (err) {
+                    this.log.error(`Periodic health check failed: ${err.message}`);
+                }
+            }, intervalMs);
+            
+            this.log.info(`Periodic health checks enabled (interval: ${intervalMinutes} minutes)`);
         } catch (err) {
             this.log.error(`Health check failed: ${err.message}`);
         }
@@ -306,6 +328,13 @@ class Health extends utils.Adapter {
      */
     async onUnload(callback) {
         try {
+            // Clear health check interval
+            if (this.healthCheckInterval) {
+                clearInterval(this.healthCheckInterval);
+                this.healthCheckInterval = null;
+                this.log.debug('Health check interval cleared');
+            }
+            
             if (this.crashDetection) {
                 await this.crashDetection.cleanup();
             }

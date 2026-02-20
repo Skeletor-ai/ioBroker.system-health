@@ -32,6 +32,7 @@
   },
   "native": {
     "checkIntervalHours": 6,
+    "healthCheckIntervalMinutes": 5,
     "memoryWarningMB": 500,
     "diskWarningPercent": 90,
     "staleThresholdHours": 24,
