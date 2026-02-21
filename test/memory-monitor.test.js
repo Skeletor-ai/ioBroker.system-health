@@ -37,8 +37,8 @@ describe('MemoryMonitor', () => {
 
     describe('check', () => {
         it('should return ok status when memory is normal', async () => {
-            // Set high threshold to ensure OK status
-            monitor.config.warningThresholdMB = 999999;
+            // Set very low threshold to ensure OK status (free memory will be above this)
+            monitor.config.warningThresholdMB = 1;
             monitor.config.criticalThresholdPercent = 99;
             
             const result = await monitor.check();
@@ -48,15 +48,16 @@ describe('MemoryMonitor', () => {
             assert.ok(Array.isArray(result.critical));
         });
 
-        it('should detect high memory usage', async () => {
-            // Configure low threshold to trigger warning
-            monitor.config.warningThresholdMB = 1;
+        it('should detect low free memory', async () => {
+            // Configure very high threshold to trigger warning (free memory will be below this)
+            monitor.config.warningThresholdMB = 999999;
             const result = await monitor.check();
             
-            // Should have warning status if used memory > 1 MB (which it will be)
-            if (result.stats.usedMB > 1) {
+            // Should have warning status if free memory < threshold (which it will be)
+            if (result.stats.freeMB < 999999) {
                 assert.strictEqual(result.status, 'warning');
                 assert.ok(result.warnings.length > 0);
+                assert.ok(result.warnings[0].includes('Free memory'));
             }
         });
 
