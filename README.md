@@ -99,6 +99,26 @@ Configuration is done through the ioBroker admin interface.
 - **Enable stale detection** — Monitor states for staleness (default: true)
 - **Stale threshold (hours)** — Default threshold for stale state detection (default: 24)
 
+## Dashboard
+
+The adapter includes a **dashboard tab** in the ioBroker admin interface for a visual overview of system health.
+
+### Features
+
+- **Real-time metrics**: Memory, disk usage, and system status with progress bars and color-coded indicators
+- **Duplicate state overview**: See the number of duplicate states and their details
+- **Issue list**: View all active warnings and critical problems in one place
+- **Auto-refresh**: Dashboard automatically updates every 30 seconds
+- **Manual refresh**: Click the refresh button to immediately update all data
+
+### Accessing the Dashboard
+
+1. Open the ioBroker admin interface
+2. Navigate to the **"System Health"** tab (visible after installing the adapter)
+3. View the current system status, duplicates, and warnings
+
+The dashboard provides a quick, at-a-glance view of your ioBroker system health without needing to check individual states.
+
 ## Usage
 
 The adapter runs in **schedule mode** and performs health checks at configured intervals (default: every 6 hours).

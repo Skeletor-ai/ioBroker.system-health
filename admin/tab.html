@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>System Health Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="../../lib/css/themes/jquery-ui/redmond/jquery-ui.min.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/adapter.css"/>
+    <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../../lib/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="../../js/translate.js"></script>
+    <script type="text/javascript" src="../../js/adapter-settings.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .dashboard-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+        }
+        .dashboard-header .subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-critical {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #f39c12 0%, #e74c3c 100%);
+        }
+        .progress-fill.critical {
+            background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+        }
+        .list-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .list-section h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .issue-item {
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .issue-item.warning {
+            border-left-color: #f39c12;
+        }
+        .issue-item.critical {
+            border-left-color: #e74c3c;
+        }
+        .issue-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .issue-detail {
+            font-size: 13px;
+            color: #666;
+        }
+        .no-issues {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+        }
+        .refresh-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+            margin-bottom: 20px;
+        }
+        .refresh-button:hover {
+            opacity: 0.9;
+        }
+        .refresh-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .last-update {
+            text-align: right;
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>🏥 System Health Dashboard</h1>
+            <div class="subtitle">Übersicht über Systemzustand, doppelte und veraltete Datenpunkte</div>
+        </div>
+
+        <button class="refresh-button" onclick="refreshDashboard()">🔄 Aktualisieren</button>
+        <div class="last-update" id="lastUpdate">Lädt Daten...</div>
+
+        <div class="grid">
+            <!-- Memory Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        💾
+                    </div>
+                    <div>
+                        <div class="card-title">Arbeitsspeicher</div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Status</span>
+                    <span class="status-badge status-ok" id="memory-status">OK</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Verwendet</span>
+                    <span class="metric-value" id="memory-used">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Verfügbar</span>
+                    <span class="metric-value" id="memory-free">-</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="memory-progress" style="width: 0%"></div>
+                </div>
+                <div id="memory-warnings" style="margin-top: 15px; font-size: 13px; color: #e74c3c;"></div>
+            </div>
+
+            <!-- Disk Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+                        💿
+                    </div>
+                    <div>
+                        <div class="card-title">Festplatte</div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Status</span>
+                    <span class="status-badge status-ok" id="disk-status">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Verwendet</span>
+                    <span class="metric-value" id="disk-used">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Verfügbar</span>
+                    <span class="metric-value" id="disk-free">-</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="disk-progress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- States Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+                        🔍
+                    </div>
+                    <div>
+                        <div class="card-title">Datenpunkte</div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Doppelte</span>
+                    <span class="metric-value" id="duplicates-count">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Veraltete</span>
+                    <span class="metric-value" id="stale-count">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Verwaiste</span>
+                    <span class="metric-value" id="orphaned-count">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Duplicate States List -->
+        <div class="list-section" id="duplicates-section" style="display: none;">
+            <h2>⚠️ Doppelte Datenpunkte</h2>
+            <div id="duplicates-list"></div>
+        </div>
+
+        <!-- Issues List -->
+        <div class="list-section" id="issues-section" style="display: none;">
+            <h2>⚠️ Warnungen & Probleme</h2>
+            <div id="issues-list"></div>
+        </div>
+    </div>
+
+    <script>
+        'use strict';
+
+        let socket;
+        let instance;
+
+        function init() {
+            socket.emit('getState', namespace + '.alive', function(err, state) {
+                if (err || !state || !state.val) {
+                    $('#lastUpdate').text('⚠️ Adapter ist nicht aktiv');
+                } else {
+                    refreshDashboard();
+                }
+            });
+
+            // Auto-refresh every 30 seconds
+            setInterval(refreshDashboard, 30000);
+        }
+
+        function refreshDashboard() {
+            const adapter = namespace.split('.')[0];
+            updateLastRefresh();
+            
+            // Memory
+            socket.emit('getState', namespace + '.memory.usedMB', (err, state) => {
+                if (state && state.val !== null) {
+                    $('#memory-used').text(state.val.toFixed(0) + ' MB');
+                }
+            });
+            socket.emit('getState', namespace + '.memory.freeMB', (err, state) => {
+                if (state && state.val !== null) {
+                    $('#memory-free').text(state.val.toFixed(0) + ' MB');
+                }
+            });
+            socket.emit('getState', namespace + '.memory.usedPercent', (err, state) => {
+                if (state && state.val !== null) {
+                    const percent = state.val.toFixed(1);
+                    $('#memory-progress').css('width', percent + '%');
+                    
+                    // Update progress bar color
+                    const $progress = $('#memory-progress');
+                    $progress.removeClass('warning critical');
+                    if (state.val >= 90) {
+                        $progress.addClass('critical');
+                    } else if (state.val >= 70) {
+                        $progress.addClass('warning');
+                    }
+                }
+            });
+            socket.emit('getState', namespace + '.memory.status', (err, state) => {
+                if (state && state.val) {
+                    updateStatusBadge('#memory-status', state.val);
+                }
+            });
+            socket.emit('getState', namespace + '.memory.warnings', (err, state) => {
+                if (state && state.val) {
+                    $('#memory-warnings').text(state.val);
+                } else {
+                    $('#memory-warnings').text('');
+                }
+            });
+
+            // Disk (if implemented)
+            socket.emit('getState', namespace + '.disk.usedPercent', (err, state) => {
+                if (state && state.val !== null) {
+                    $('#disk-used').text(state.val.toFixed(1) + ' %');
+                    $('#disk-progress').css('width', state.val + '%');
+                    
+                    const $progress = $('#disk-progress');
+                    $progress.removeClass('warning critical');
+                    if (state.val >= 90) {
+                        $progress.addClass('critical');
+                    } else if (state.val >= 80) {
+                        $progress.addClass('warning');
+                    }
+                }
+            });
+            socket.emit('getState', namespace + '.disk.freeMB', (err, state) => {
+                if (state && state.val !== null) {
+                    const freeGB = (state.val / 1024).toFixed(1);
+                    $('#disk-free').text(freeGB + ' GB');
+                }
+            });
+            socket.emit('getState', namespace + '.disk.status', (err, state) => {
+                if (state && state.val) {
+                    updateStatusBadge('#disk-status', state.val);
+                }
+            });
+
+            // State inspector data
+            socket.emit('sendTo', adapter + '.' + instance, 'getDashboardData', {}, (result) => {
+                if (result && result.error) {
+                    console.error('Dashboard data error:', result.error);
+                    return;
+                }
+                if (result) {
+                    updateStateInspectorData(result);
+                }
+            });
+        }
+
+        function updateStatusBadge(selector, status) {
+            const $badge = $(selector);
+            $badge.removeClass('status-ok status-warning status-critical');
+            
+            if (status === 'ok' || status === 'OK') {
+                $badge.addClass('status-ok').text('OK');
+            } else if (status === 'warning') {
+                $badge.addClass('status-warning').text('WARNUNG');
+            } else if (status === 'critical') {
+                $badge.addClass('status-critical').text('KRITISCH');
+            } else {
+                $badge.text(status);
+            }
+        }
+
+        function updateStateInspectorData(data) {
+            // Duplicates
+            const duplicatesCount = data.duplicates ? data.duplicates.length : 0;
+            $('#duplicates-count').text(duplicatesCount);
+            
+            if (duplicatesCount > 0) {
+                $('#duplicates-section').show();
+                const $list = $('#duplicates-list');
+                $list.empty();
+                
+                data.duplicates.slice(0, 10).forEach(group => {
+                    $list.append(`
+                        <div class="issue-item warning">
+                            <div class="issue-title">Ähnliche Datenpunkte (${group.states.length})</div>
+                            <div class="issue-detail">${group.states.join(', ')}</div>
+                        </div>
+                    `);
+                });
+                
+                if (duplicatesCount > 10) {
+                    $list.append(`<div class="issue-detail" style="text-align: center; margin-top: 10px;">... und ${duplicatesCount - 10} weitere</div>`);
+                }
+            } else {
+                $('#duplicates-section').hide();
+            }
+
+            // Stale states (placeholder)
+            $('#stale-count').text(data.staleCount || '0');
+            
+            // Orphaned states (placeholder)
+            $('#orphaned-count').text(data.orphanedCount || '0');
+
+            // Issues
+            if (data.issues && data.issues.length > 0) {
+                $('#issues-section').show();
+                const $list = $('#issues-list');
+                $list.empty();
+                
+                data.issues.forEach(issue => {
+                    $list.append(`
+                        <div class="issue-item ${issue.severity || 'warning'}">
+                            <div class="issue-title">${issue.title}</div>
+                            <div class="issue-detail">${issue.description}</div>
+                        </div>
+                    `);
+                });
+            } else {
+                $('#issues-section').hide();
+            }
+        }
+
+        function updateLastRefresh() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('de-DE');
+            $('#lastUpdate').text('Zuletzt aktualisiert: ' + timeStr);
+        }
+
+        // Global namespace and instance will be set by adapter-settings.js
+    </script>
+</body>
+</html>

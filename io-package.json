@@ -40,7 +40,16 @@
             }
         ],
         "adminUI": {
-            "config": "json"
+            "config": "json",
+            "tab": "tab.html"
+        },
+        "adminTab": {
+            "singleton": true,
+            "name": {
+                "en": "System Health",
+                "de": "Systemgesundheit"
+            },
+            "fa-icon": "fa-heartbeat"
         }
     },
     "native": {

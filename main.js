@@ -18,6 +18,7 @@ class Health extends utils.Adapter {
         });
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
+        this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
         this.memoryMonitor = null;
         this.cpuMonitor = null;
@@ -85,6 +86,96 @@ class Health extends utils.Adapter {
         if (this.crashDetection && id.includes('.alive')) {
             await this.crashDetection.onAliveStateChange(id, state);
         }
+    }
+
+    /**
+     * Handle messages from admin UI.
+     * @param {ioBroker.Message} obj - Message object
+     */
+    async onMessage(obj) {
+        if (typeof obj === 'object' && obj.message) {
+            if (obj.command === 'getDashboardData') {
+                try {
+                    const data = await this.getDashboardData();
+                    if (obj.callback) {
+                        this.sendTo(obj.from, obj.command, data, obj.callback);
+                    }
+                } catch (err) {
+                    this.log.error(`getDashboardData failed: ${err.message}`);
+                    if (obj.callback) {
+                        this.sendTo(obj.from, obj.command, { error: err.message }, obj.callback);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Get dashboard data for admin UI.
+     * @returns {Promise<object>} Dashboard data object
+     */
+    async getDashboardData() {
+        const data = {
+            duplicates: [],
+            staleCount: 0,
+            orphanedCount: 0,
+            issues: []
+        };
+
+        // Get duplicate states
+        if (this.duplicateInspector) {
+            try {
+                const duplicates = await this.duplicateInspector.scan();
+                data.duplicates = duplicates.map(group => ({
+                    states: group.states,
+                    similarity: group.similarity
+                }));
+            } catch (err) {
+                this.log.error(`Failed to get duplicate states: ${err.message}`);
+            }
+        } else if (this.config.enableDuplicateDetection) {
+            // Initialize if needed
+            const threshold = this.config.duplicateSimilarityThreshold || 0.9;
+            this.duplicateInspector = new DuplicateStateInspector(this, threshold);
+            await this.duplicateInspector.init();
+            const duplicates = await this.duplicateInspector.scan();
+            data.duplicates = duplicates.map(group => ({
+                states: group.states,
+                similarity: group.similarity
+            }));
+        }
+
+        // Collect issues from states
+        const memoryStatus = await this.getStateAsync('memory.status');
+        if (memoryStatus && memoryStatus.val !== 'ok' && memoryStatus.val !== 'OK') {
+            const warnings = await this.getStateAsync('memory.warnings');
+            data.issues.push({
+                title: 'Speicherproblem',
+                description: warnings ? warnings.val : 'Speicherstatus: ' + memoryStatus.val,
+                severity: memoryStatus.val === 'critical' ? 'critical' : 'warning'
+            });
+        }
+
+        const diskStatus = await this.getStateAsync('disk.status');
+        if (diskStatus && diskStatus.val !== 'ok' && diskStatus.val !== 'OK') {
+            const warnings = await this.getStateAsync('disk.warnings');
+            data.issues.push({
+                title: 'Festplattenproblem',
+                description: warnings ? warnings.val : 'Festplattenstatus: ' + diskStatus.val,
+                severity: diskStatus.val === 'critical' ? 'critical' : 'warning'
+            });
+        }
+
+        const memoryLeak = await this.getStateAsync('memory.leakDetected');
+        if (memoryLeak && memoryLeak.val === true) {
+            data.issues.push({
+                title: 'Speicherleck erkannt',
+                description: 'Ein mögliches Speicherleck wurde entdeckt',
+                severity: 'warning'
+            });
+        }
+
+        return data;
     }
 
     /**
