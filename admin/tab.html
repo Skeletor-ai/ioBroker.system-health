@@ -7,9 +7,9 @@
     <link rel="stylesheet" type="text/css" href="../../lib/css/themes/jquery-ui/redmond/jquery-ui.min.css"/>
     <link rel="stylesheet" type="text/css" href="../../css/adapter.css"/>
     <script type="text/javascript" src="../../lib/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../../socket.io/socket.io.js"></script>
     <script type="text/javascript" src="../../lib/js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../../js/translate.js"></script>
-    <script type="text/javascript" src="../../js/adapter-settings.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -310,6 +310,40 @@
 
         let socket;
         let instance;
+        let namespace;
+
+        // Get instance from URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Initialize socket connection and variables
+        $(document).ready(function() {
+            // Extract instance from URL (e.g., ?0 or ?instance=0)
+            instance = getUrlParameter('instance') || window.location.search.replace(/[?&]/, '') || '0';
+            namespace = 'system-health.' + instance;
+
+            // Connect to socket
+            socket = io.connect('/', {
+                query: 'key=' + (typeof socketSession !== 'undefined' ? socketSession : '')
+            });
+
+            socket.on('connect', function() {
+                console.log('Socket connected');
+                init();
+            });
+
+            socket.on('disconnect', function() {
+                console.log('Socket disconnected');
+                $('#lastUpdate').text('⚠️ Verbindung unterbrochen');
+            });
+
+            socket.on('reconnect', function() {
+                console.log('Socket reconnected');
+                init();
+            });
+        });
 
         function init() {
             socket.emit('getState', namespace + '.alive', function(err, state) {
@@ -395,7 +429,7 @@
             });
 
             // State inspector data
-            socket.emit('sendTo', adapter + '.' + instance, 'getDashboardData', {}, (result) => {
+            socket.emit('sendTo', 'system-health.' + instance, 'getDashboardData', {}, (result) => {
                 if (result && result.error) {
                     console.error('Dashboard data error:', result.error);
                     return;
@@ -477,8 +511,6 @@
             const timeStr = now.toLocaleTimeString('de-DE');
             $('#lastUpdate').text('Zuletzt aktualisiert: ' + timeStr);
         }
-
-        // Global namespace and instance will be set by adapter-settings.js
     </script>
 </body>
 </html>
