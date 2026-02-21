@@ -15,8 +15,10 @@ gh issue list --repo Skeletor-ai/ioBroker.system-health --label ready --assignee
 
 If no unassigned `ready` issues exist, you're done. Check back later.
 
+**Priority:** Always pick `bug` issues before `enhancement` issues. Bugs take precedence.
+
 ### 2. Claim an Issue
-Pick the **oldest** unassigned `ready` issue:
+Pick the highest-priority unassigned `ready` issue (bugs first, then oldest):
 ```bash
 gh issue edit <NUMBER> --repo Skeletor-ai/ioBroker.system-health --add-assignee @me
 ```
