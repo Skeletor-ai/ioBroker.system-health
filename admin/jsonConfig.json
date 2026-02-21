@@ -1,0 +1,130 @@
+{
+    "i18n": true,
+    "type": "panel",
+    "items": {
+        "_generalHeader": {
+            "type": "header",
+            "text": "General Settings",
+            "size": 3
+        },
+        "checkIntervalHours": {
+            "type": "number",
+            "label": "Check interval (hours)",
+            "help": "How often to run full health checks (1-168 hours)",
+            "min": 1,
+            "max": 168,
+            "default": 6,
+            "sm": 6
+        },
+        "healthCheckIntervalMinutes": {
+            "type": "number",
+            "label": "Quick check interval (minutes)",
+            "help": "How often to run quick periodic checks (1-60 minutes)",
+            "min": 1,
+            "max": 60,
+            "default": 5,
+            "sm": 6
+        },
+
+        "_memoryHeader": {
+            "type": "header",
+            "text": "Memory Monitoring",
+            "size": 3
+        },
+        "enableMemoryMonitoring": {
+            "type": "checkbox",
+            "label": "Enable memory monitoring",
+            "default": true,
+            "sm": 6
+        },
+        "memoryWarningMB": {
+            "type": "number",
+            "label": "Memory warning threshold (MB)",
+            "help": "Alert when free memory drops below this value",
+            "min": 100,
+            "max": 100000,
+            "default": 500,
+            "sm": 6,
+            "hidden": "!data.enableMemoryMonitoring"
+        },
+
+        "_diskHeader": {
+            "type": "header",
+            "text": "Disk Monitoring",
+            "size": 3
+        },
+        "enableDiskMonitoring": {
+            "type": "checkbox",
+            "label": "Enable disk monitoring",
+            "default": true,
+            "sm": 6
+        },
+        "diskWarningPercent": {
+            "type": "number",
+            "label": "Disk warning threshold (%)",
+            "help": "Alert when disk usage exceeds this percentage",
+            "min": 50,
+            "max": 99,
+            "default": 90,
+            "sm": 6,
+            "hidden": "!data.enableDiskMonitoring"
+        },
+
+        "_crashHeader": {
+            "type": "header",
+            "text": "Adapter Crash Detection",
+            "size": 3
+        },
+        "enableAdapterCrashDetection": {
+            "type": "checkbox",
+            "label": "Enable adapter crash detection",
+            "default": true,
+            "sm": 6
+        },
+
+        "_stateHeader": {
+            "type": "header",
+            "text": "State Inspector",
+            "size": 3
+        },
+        "enableOrphanDetection": {
+            "type": "checkbox",
+            "label": "Enable orphaned state detection",
+            "default": true,
+            "sm": 6
+        },
+        "enableDuplicateDetection": {
+            "type": "checkbox",
+            "label": "Enable duplicate state detection",
+            "default": true,
+            "sm": 6
+        },
+        "duplicateSimilarityThreshold": {
+            "type": "number",
+            "label": "Duplicate similarity threshold",
+            "help": "How similar state names must be to be flagged (0.5-1.0)",
+            "min": 0.5,
+            "max": 1.0,
+            "step": 0.05,
+            "default": 0.9,
+            "sm": 6,
+            "hidden": "!data.enableDuplicateDetection"
+        },
+        "enableStaleDetection": {
+            "type": "checkbox",
+            "label": "Enable stale state detection",
+            "default": true,
+            "sm": 6
+        },
+        "staleThresholdHours": {
+            "type": "number",
+            "label": "Stale threshold (hours)",
+            "help": "Consider states stale if not updated within this time",
+            "min": 1,
+            "max": 8760,
+            "default": 24,
+            "sm": 6,
+            "hidden": "!data.enableStaleDetection"
+        }
+    }
+}
