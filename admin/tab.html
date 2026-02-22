@@ -311,6 +311,7 @@
         let socket;
         let instance;
         let namespace;
+        let refreshTimer = null;
 
         // Get instance from URL parameters
         function getUrlParameter(name) {
@@ -346,20 +347,18 @@
         });
 
         function init() {
+            if (refreshTimer) clearTimeout(refreshTimer);
             checkAliveAndRefresh();
-
-            // Auto-refresh every 30 seconds
-            setInterval(checkAliveAndRefresh, 30000);
         }
 
         function checkAliveAndRefresh() {
             socket.emit('getState', namespace + '.alive', function(err, state) {
                 if (err || !state || !state.val) {
                     $('#lastUpdate').text('⚠️ Adapter ist nicht aktiv');
-                    // Retry after 5 seconds
-                    setTimeout(checkAliveAndRefresh, 5000);
+                    refreshTimer = setTimeout(checkAliveAndRefresh, 5000);
                 } else {
                     refreshDashboard();
+                    refreshTimer = setTimeout(checkAliveAndRefresh, 30000);
                 }
             });
         }
