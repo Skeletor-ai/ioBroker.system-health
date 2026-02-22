@@ -125,6 +125,13 @@
             "default": 24,
             "sm": 6,
             "hidden": "!data.enableStaleDetection"
+        },
+        "stateInspectorIgnorePatterns": {
+            "type": "chips",
+            "label": "State Inspector ignore patterns",
+            "help": "State patterns to exclude from all inspections (e.g., system.*, admin.*, mydevice.*)",
+            "delimiter": ",",
+            "sm": 12
         }
     }
 }
