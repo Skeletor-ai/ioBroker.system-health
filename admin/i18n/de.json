@@ -43,6 +43,10 @@
     "orphanedDetails": "Verwaiste States (Details)",
     "staleDetails": "Veraltete States (Details)",
     "duplicateDetails": "Duplikate (Details)",
+    "cleanupSuggestions": "Bereinigungsvorschläge",
+    "cleanupDescription": "Automatische Vorschläge zum Bereinigen verwaister und veralteter States. Nur Bericht — keine automatische Löschung.",
+    "safeToDelete": "Sicher zu löschen",
+    "reviewRequired": "Überprüfung erforderlich",
     "noDataAvailable": "Keine Daten verfügbar. Bitte zuerst einen Health-Check ausführen.",
     "noIssuesFound": "Keine Probleme gefunden."
 }

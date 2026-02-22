@@ -43,6 +43,10 @@
     "orphanedDetails": "Orphaned States Details",
     "staleDetails": "Stale States Details",
     "duplicateDetails": "Duplicate States Details",
+    "cleanupSuggestions": "Cleanup Suggestions",
+    "cleanupDescription": "Automated suggestions for cleaning up orphaned and stale states. Report-only — no automatic deletion.",
+    "safeToDelete": "Safe to Delete",
+    "reviewRequired": "Review Required",
     "noDataAvailable": "No data available. Run a health check first.",
     "noIssuesFound": "No issues found."
 }

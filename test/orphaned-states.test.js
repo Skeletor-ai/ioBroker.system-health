@@ -264,15 +264,15 @@ describe('OrphanedStateInspector', () => {
             const inspector = new OrphanedStateInspector(adapter, []);
 
             inspector.orphanedStates = [
-                { id: 'old.0.state1', category: 'adapter_removed' },
-                { id: 'disabled.0.state', category: 'adapter_disabled' },
-                { id: 'active.0.state', category: 'unreferenced' }
+                { id: 'old.0.state1', category: 'adapter_removed', reason: 'Adapter removed', adapter: 'old.0' },
+                { id: 'disabled.0.state', category: 'adapter_disabled', reason: 'Adapter disabled', adapter: 'disabled.0' },
+                { id: 'active.0.state', category: 'unreferenced', reason: 'Unreferenced', adapter: 'active.0' }
             ];
 
             const suggestions = inspector.getCleanupSuggestions();
 
             assert.strictEqual(suggestions.safeToDelete.length, 1);
-            assert.ok(suggestions.safeToDelete.includes('old.0.state1'));
+            assert.strictEqual(suggestions.safeToDelete[0].id, 'old.0.state1');
             assert.strictEqual(suggestions.reviewRequired.length, 2);
         });
     });
