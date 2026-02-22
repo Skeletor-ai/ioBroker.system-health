@@ -58,6 +58,7 @@
         "memoryWarningMB": 500,
         "diskWarningPercent": 90,
         "staleThresholdHours": 24,
+        "stateInspectorIgnorePatterns": [],
         "enableOrphanDetection": true,
         "enableDuplicateDetection": true,
         "duplicateSimilarityThreshold": 0.9,

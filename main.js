@@ -431,7 +431,8 @@ class Health extends utils.Adapter {
     async runDuplicateDetection() {
         if (!this.duplicateInspector) {
             const threshold = this.config.duplicateSimilarityThreshold || 0.9;
-            this.duplicateInspector = new DuplicateStateInspector(this, threshold);
+            const ignorePatterns = this.config.stateInspectorIgnorePatterns || [];
+            this.duplicateInspector = new DuplicateStateInspector(this, threshold, ignorePatterns);
             await this.duplicateInspector.init();
         }
 
@@ -449,8 +450,8 @@ class Health extends utils.Adapter {
      */
     async runOrphanDetection() {
         if (!this.orphanedInspector) {
-            const ignoreList = this.config.orphanIgnorePatterns || ['system.*', 'admin.*'];
-            this.orphanedInspector = new OrphanedStateInspector(this, ignoreList);
+            const ignorePatterns = this.config.stateInspectorIgnorePatterns || [];
+            this.orphanedInspector = new OrphanedStateInspector(this, ignorePatterns);
             await this.orphanedInspector.init();
         }
 
@@ -469,7 +470,7 @@ class Health extends utils.Adapter {
     async runStaleDetection() {
         if (!this.staleInspector) {
             const thresholdHours = this.config.staleThresholdHours || 24;
-            const ignorePatterns = this.config.staleIgnorePatterns || [];
+            const ignorePatterns = this.config.stateInspectorIgnorePatterns || [];
             this.staleInspector = new StaleStateInspector(this, thresholdHours, ignorePatterns);
             await this.staleInspector.init();
         }
