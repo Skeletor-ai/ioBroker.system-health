@@ -560,7 +560,7 @@ class Health extends utils.Adapter {
         html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('category', lang)}</th><th style="padding:6px;text-align:left;">${this.t('reason', lang)}</th></tr>`;
 
         for (const s of states) {
-            html += '<tr style="border-bottom:1px solid currentColor;border-opacity:0.15;">';
+            html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
             html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${this.escapeHtml(s.id)}</td>`;
             html += `<td style="padding:4px 6px;">${this.escapeHtml(s.category)}</td>`;
             html += `<td style="padding:4px 6px;">${this.escapeHtml(s.reason)}</td>`;
@@ -592,7 +592,7 @@ class Health extends utils.Adapter {
         html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('adapter', lang)}</th><th style="padding:6px;text-align:left;">${this.t('lastUpdate', lang)}</th><th style="padding:6px;text-align:left;">${this.t('ageHours', lang)}</th></tr>`;
 
         for (const s of states) {
-            html += '<tr style="border-bottom:1px solid currentColor;border-opacity:0.15;">';
+            html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
             html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${this.escapeHtml(s.id)}</td>`;
             html += `<td style="padding:4px 6px;">${this.escapeHtml(s.adapter)}</td>`;
             html += `<td style="padding:4px 6px;">${this.escapeHtml(s.lastUpdate)}</td>`;
@@ -627,7 +627,7 @@ class Health extends utils.Adapter {
         groups.forEach((group, i) => {
             const statesStr = (group.states || []).map(s => this.escapeHtml(s)).join('<br>');
             const similarity = group.similarity ? (group.similarity * 100).toFixed(0) + '%' : '-';
-            html += '<tr style="border-bottom:1px solid currentColor;border-opacity:0.15;">';
+            html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
             html += `<td style="padding:4px 6px;">${i + 1}</td>`;
             html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${statesStr}</td>`;
             html += `<td style="padding:4px 6px;">${similarity}</td>`;
