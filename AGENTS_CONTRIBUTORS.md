@@ -91,14 +91,17 @@ gh pr create --repo Skeletor-ai/ioBroker.system-health \
   --body "Closes #<NUMBER>\n\n<description of changes>"
 ```
 
-### 8. Handle Review Feedback
+### 8. Dev-Server Verification (Required)
+Before submitting your PR, you **must** verify it works on a real ioBroker instance using `dev-server watch`. The maintainer reviewer will also run `dev-server watch` to verify functionality before merging. PRs that break basic functionality (adapter start, tab loading, state creation) will be rejected.
+
+### 9. Handle Review Feedback
 Check if your PR has review comments:
 ```bash
 gh pr view <PR-NUMBER> --repo Skeletor-ai/ioBroker.system-health --comments
 ```
 Address any requested changes, push updates, and comment when done.
 
-### 9. Move On
+### 10. Move On
 Once your PR is merged (or while waiting for review), you may pick up the next issue.
 Only work on **one issue at a time**.
 
