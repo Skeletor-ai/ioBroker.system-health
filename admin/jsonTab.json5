@@ -1,0 +1,174 @@
+{
+    "i18n": true,
+    "items": {
+        "_header": {
+            "type": "header",
+            "text": "System Health Dashboard",
+            "size": 2
+        },
+
+        // === Memory Section ===
+        "_memoryHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "memoryMonitoring",
+            "size": 4
+        },
+        "_memoryStatus": {
+            "newLine": true,
+            "type": "state",
+            "oid": "memory.status",
+            "label": "memoryStatus",
+            "sm": 4
+        },
+        "_memoryUsed": {
+            "type": "state",
+            "oid": "memory.usedMB",
+            "label": "memoryUsed",
+            "sm": 4,
+            "unit": "MB"
+        },
+        "_memoryFree": {
+            "type": "state",
+            "oid": "memory.freeMB",
+            "label": "memoryFree",
+            "sm": 4,
+            "unit": "MB"
+        },
+        "_memoryPercent": {
+            "newLine": true,
+            "type": "state",
+            "oid": "memory.usedPercent",
+            "label": "memoryUsedPercent",
+            "sm": 4,
+            "unit": "%"
+        },
+        "_memoryLeak": {
+            "type": "state",
+            "oid": "memory.leakDetected",
+            "label": "memoryLeakDetected",
+            "sm": 4
+        },
+        "_memoryWarnings": {
+            "type": "state",
+            "oid": "memory.warnings",
+            "label": "memoryWarnings",
+            "sm": 4
+        },
+
+        // === Disk Section ===
+        "_diskHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "diskMonitoring",
+            "size": 4
+        },
+        "_diskStatus": {
+            "newLine": true,
+            "type": "state",
+            "oid": "disk.status",
+            "label": "diskStatus",
+            "sm": 4
+        },
+        "_diskUsed": {
+            "type": "state",
+            "oid": "disk.usedPercent",
+            "label": "diskUsedPercent",
+            "sm": 4,
+            "unit": "%"
+        },
+        "_diskFree": {
+            "type": "state",
+            "oid": "disk.freeMB",
+            "label": "diskFree",
+            "sm": 4,
+            "unit": "MB"
+        },
+
+        // === State Inspector Section ===
+        "_inspectorHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "stateInspector",
+            "size": 4
+        },
+        "_totalIssues": {
+            "newLine": true,
+            "type": "state",
+            "oid": "stateInspector.totalIssues",
+            "label": "totalIssues",
+            "sm": 3
+        },
+        "_orphanedCount": {
+            "type": "state",
+            "oid": "stateInspector.orphaned",
+            "label": "orphanedStates",
+            "sm": 3
+        },
+        "_staleCount": {
+            "type": "state",
+            "oid": "stateInspector.stale",
+            "label": "staleStates",
+            "sm": 3
+        },
+        "_duplicateCount": {
+            "type": "state",
+            "oid": "stateInspector.duplicates",
+            "label": "duplicateGroups",
+            "sm": 3
+        },
+        "_lastScan": {
+            "newLine": true,
+            "type": "state",
+            "oid": "stateInspector.lastScan",
+            "label": "lastScan",
+            "sm": 12
+        },
+
+        // === Detail Lists via sendTo ===
+        "_orphanedDetailsHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "orphanedDetails",
+            "size": 4
+        },
+        "_orphanedDetails": {
+            "newLine": true,
+            "type": "textSendTo",
+            "container": "html",
+            "command": "getOrphanedDetails",
+            "jsonData": "{\"lang\": \"${systemLang}\"}",
+            "sm": 12
+        },
+
+        "_staleDetailsHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "staleDetails",
+            "size": 4
+        },
+        "_staleDetails": {
+            "newLine": true,
+            "type": "textSendTo",
+            "container": "html",
+            "command": "getStaleDetails",
+            "jsonData": "{\"lang\": \"${systemLang}\"}",
+            "sm": 12
+        },
+
+        "_duplicateDetailsHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "duplicateDetails",
+            "size": 4
+        },
+        "_duplicateDetails": {
+            "newLine": true,
+            "type": "textSendTo",
+            "container": "html",
+            "command": "getDuplicateDetails",
+            "jsonData": "{\"lang\": \"${systemLang}\"}",
+            "sm": 12
+        }
+    }
+}

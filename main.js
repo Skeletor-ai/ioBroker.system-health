@@ -101,89 +101,29 @@ class Health extends utils.Adapter {
      * @param {ioBroker.Message} obj - Message object
      */
     async onMessage(obj) {
-        if (typeof obj === 'object' && obj.message) {
-            if (obj.command === 'getDashboardData') {
-                try {
-                    const data = await this.getDashboardData();
-                    if (obj.callback) {
-                        this.sendTo(obj.from, obj.command, data, obj.callback);
-                    }
-                } catch (err) {
-                    this.log.error(`getDashboardData failed: ${err.message}`);
-                    if (obj.callback) {
-                        this.sendTo(obj.from, obj.command, { error: err.message }, obj.callback);
-                    }
+        if (typeof obj === 'object') {
+            const command = obj.command;
+
+            if (command === 'getOrphanedDetails') {
+                const lang = (obj.message && obj.message.lang) || 'en';
+                const html = this.renderOrphanedDetailsHtml(lang);
+                if (obj.callback) {
+                    this.sendTo(obj.from, obj.command, html, obj.callback);
+                }
+            } else if (command === 'getStaleDetails') {
+                const lang = (obj.message && obj.message.lang) || 'en';
+                const html = this.renderStaleDetailsHtml(lang);
+                if (obj.callback) {
+                    this.sendTo(obj.from, obj.command, html, obj.callback);
+                }
+            } else if (command === 'getDuplicateDetails') {
+                const lang = (obj.message && obj.message.lang) || 'en';
+                const html = this.renderDuplicateDetailsHtml(lang);
+                if (obj.callback) {
+                    this.sendTo(obj.from, obj.command, html, obj.callback);
                 }
             }
         }
-    }
-
-    /**
-     * Get dashboard data for admin UI.
-     * @returns {Promise<object>} Dashboard data object
-     */
-    async getDashboardData() {
-        const data = {
-            duplicates: [],
-            staleCount: this.staleInspector ? this.staleInspector.staleStates.length : 0,
-            orphanedCount: this.orphanedInspector ? this.orphanedInspector.orphanedStates.length : 0,
-            issues: []
-        };
-
-        // Get duplicate states
-        if (this.duplicateInspector) {
-            try {
-                const duplicates = await this.duplicateInspector.scan();
-                data.duplicates = duplicates.map(group => ({
-                    states: group.states,
-                    similarity: group.similarity
-                }));
-            } catch (err) {
-                this.log.error(`Failed to get duplicate states: ${err.message}`);
-            }
-        } else if (this.config.enableDuplicateDetection) {
-            // Initialize if needed
-            const threshold = this.config.duplicateSimilarityThreshold || 0.9;
-            this.duplicateInspector = new DuplicateStateInspector(this, threshold);
-            await this.duplicateInspector.init();
-            const duplicates = await this.duplicateInspector.scan();
-            data.duplicates = duplicates.map(group => ({
-                states: group.states,
-                similarity: group.similarity
-            }));
-        }
-
-        // Collect issues from states
-        const memoryStatus = await this.getStateAsync('memory.status');
-        if (memoryStatus && memoryStatus.val !== 'ok' && memoryStatus.val !== 'OK') {
-            const warnings = await this.getStateAsync('memory.warnings');
-            data.issues.push({
-                title: 'Speicherproblem',
-                description: warnings ? warnings.val : 'Speicherstatus: ' + memoryStatus.val,
-                severity: memoryStatus.val === 'critical' ? 'critical' : 'warning'
-            });
-        }
-
-        const diskStatus = await this.getStateAsync('disk.status');
-        if (diskStatus && diskStatus.val !== 'ok' && diskStatus.val !== 'OK') {
-            const warnings = await this.getStateAsync('disk.warnings');
-            data.issues.push({
-                title: 'Festplattenproblem',
-                description: warnings ? warnings.val : 'Festplattenstatus: ' + diskStatus.val,
-                severity: diskStatus.val === 'critical' ? 'critical' : 'warning'
-            });
-        }
-
-        const memoryLeak = await this.getStateAsync('memory.leakDetected');
-        if (memoryLeak && memoryLeak.val === true) {
-            data.issues.push({
-                title: 'Speicherleck erkannt',
-                description: 'Ein mögliches Speicherleck wurde entdeckt',
-                severity: 'warning'
-            });
-        }
-
-        return data;
     }
 
     /**
@@ -574,6 +514,145 @@ class Health extends utils.Adapter {
         await this.setStateAsync('stateInspector.details', JSON.stringify(details, null, 2), true);
 
         this.log.info(`State Inspector summary: ${totalIssues} total issues (${orphanedCount} orphaned, ${staleCount} stale, ${duplicateCount} duplicates)`);
+    }
+
+    /**
+     * Get translation for a key based on language.
+     * @param {string} key - Translation key
+     * @param {string} lang - Language code (de, en, ...)
+     * @returns {string} Translated string
+     */
+    t(key, lang) {
+        const translations = {
+            'noOrphanedStates': { en: 'No orphaned states found.', de: 'Keine verwaisten States gefunden.' },
+            'noStaleStates': { en: 'No stale states found.', de: 'Keine veralteten States gefunden.' },
+            'noDuplicates': { en: 'No duplicate states found.', de: 'Keine Duplikate gefunden.' },
+            'stateId': { en: 'State ID', de: 'State ID' },
+            'category': { en: 'Category', de: 'Kategorie' },
+            'reason': { en: 'Reason', de: 'Grund' },
+            'adapter': { en: 'Adapter', de: 'Adapter' },
+            'lastUpdate': { en: 'Last Update', de: 'Letztes Update' },
+            'ageHours': { en: 'Age (h)', de: 'Alter (h)' },
+            'states': { en: 'States', de: 'States' },
+            'similarity': { en: 'Similarity', de: 'Ähnlichkeit' },
+            'showingXofY': { en: 'Showing {0} of {1}', de: 'Zeige {0} von {1}' },
+        };
+        const entry = translations[key];
+        if (!entry) return key;
+        return entry[lang] || entry.en || key;
+    }
+
+    /**
+     * Render HTML table for orphaned state details.
+     * @param {string} [lang] - Language code
+     * @returns {string} HTML string
+     */
+    renderOrphanedDetailsHtml(lang = 'en') {
+        if (!this.orphanedInspector || this.orphanedInspector.orphanedStates.length === 0) {
+            return `<div style="padding:8px;opacity:0.6;">${this.t('noOrphanedStates', lang)}</div>`;
+        }
+
+        const MAX = 50;
+        const states = this.orphanedInspector.orphanedStates.slice(0, MAX);
+        const total = this.orphanedInspector.orphanedStates.length;
+
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('category', lang)}</th><th style="padding:6px;text-align:left;">${this.t('reason', lang)}</th></tr>`;
+
+        for (const s of states) {
+            html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
+            html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${this.escapeHtml(s.id)}</td>`;
+            html += `<td style="padding:4px 6px;">${this.escapeHtml(s.category)}</td>`;
+            html += `<td style="padding:4px 6px;">${this.escapeHtml(s.reason)}</td>`;
+            html += '</tr>';
+        }
+
+        html += '</table>';
+        if (total > MAX) {
+            html += `<div style="padding:8px;opacity:0.6;font-size:12px;">${this.t('showingXofY', lang).replace('{0}', MAX).replace('{1}', total)}</div>`;
+        }
+        return html;
+    }
+
+    /**
+     * Render HTML table for stale state details.
+     * @param {string} [lang] - Language code
+     * @returns {string} HTML string
+     */
+    renderStaleDetailsHtml(lang = 'en') {
+        if (!this.staleInspector || this.staleInspector.staleStates.length === 0) {
+            return `<div style="padding:8px;opacity:0.6;">${this.t('noStaleStates', lang)}</div>`;
+        }
+
+        const MAX = 50;
+        const states = this.staleInspector.staleStates.slice(0, MAX);
+        const total = this.staleInspector.staleStates.length;
+
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('adapter', lang)}</th><th style="padding:6px;text-align:left;">${this.t('lastUpdate', lang)}</th><th style="padding:6px;text-align:left;">${this.t('ageHours', lang)}</th></tr>`;
+
+        for (const s of states) {
+            html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
+            html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${this.escapeHtml(s.id)}</td>`;
+            html += `<td style="padding:4px 6px;">${this.escapeHtml(s.adapter)}</td>`;
+            html += `<td style="padding:4px 6px;">${this.escapeHtml(s.lastUpdate)}</td>`;
+            html += `<td style="padding:4px 6px;">${s.ageHours}</td>`;
+            html += '</tr>';
+        }
+
+        html += '</table>';
+        if (total > MAX) {
+            html += `<div style="padding:8px;opacity:0.6;font-size:12px;">${this.t('showingXofY', lang).replace('{0}', MAX).replace('{1}', total)}</div>`;
+        }
+        return html;
+    }
+
+    /**
+     * Render HTML table for duplicate state details.
+     * @param {string} [lang] - Language code
+     * @returns {string} HTML string
+     */
+    renderDuplicateDetailsHtml(lang = 'en') {
+        if (!this.duplicateInspector || this.duplicateInspector.duplicates.length === 0) {
+            return `<div style="padding:8px;opacity:0.6;">${this.t('noDuplicates', lang)}</div>`;
+        }
+
+        const MAX = 50;
+        const groups = this.duplicateInspector.duplicates.slice(0, MAX);
+        const total = this.duplicateInspector.duplicates.length;
+
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">#</th><th style="padding:6px;text-align:left;">${this.t('states', lang)}</th><th style="padding:6px;text-align:left;">${this.t('similarity', lang)}</th></tr>`;
+
+        groups.forEach((group, i) => {
+            const statesStr = (group.states || []).map(s => this.escapeHtml(s)).join('<br>');
+            const similarity = group.similarity ? (group.similarity * 100).toFixed(0) + '%' : '-';
+            html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
+            html += `<td style="padding:4px 6px;">${i + 1}</td>`;
+            html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${statesStr}</td>`;
+            html += `<td style="padding:4px 6px;">${similarity}</td>`;
+            html += '</tr>';
+        });
+
+        html += '</table>';
+        if (total > MAX) {
+            html += `<div style="padding:8px;opacity:0.6;font-size:12px;">${this.t('showingXofY', lang).replace('{0}', MAX).replace('{1}', total)}</div>`;
+        }
+        return html;
+    }
+
+    /**
+     * Escape HTML special characters.
+     * @param {string} str - Input string
+     * @returns {string} Escaped string
+     */
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 
     /**
