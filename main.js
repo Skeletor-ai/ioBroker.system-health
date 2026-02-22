@@ -101,8 +101,10 @@ class Health extends utils.Adapter {
      * @param {ioBroker.Message} obj - Message object
      */
     async onMessage(obj) {
-        if (typeof obj === 'object' && obj.message) {
-            if (obj.command === 'getDashboardData') {
+        if (typeof obj === 'object') {
+            const command = obj.command;
+
+            if (command === 'getDashboardData') {
                 try {
                     const data = await this.getDashboardData();
                     if (obj.callback) {
@@ -113,6 +115,21 @@ class Health extends utils.Adapter {
                     if (obj.callback) {
                         this.sendTo(obj.from, obj.command, { error: err.message }, obj.callback);
                     }
+                }
+            } else if (command === 'getOrphanedDetails') {
+                const html = this.renderOrphanedDetailsHtml();
+                if (obj.callback) {
+                    this.sendTo(obj.from, obj.command, html, obj.callback);
+                }
+            } else if (command === 'getStaleDetails') {
+                const html = this.renderStaleDetailsHtml();
+                if (obj.callback) {
+                    this.sendTo(obj.from, obj.command, html, obj.callback);
+                }
+            } else if (command === 'getDuplicateDetails') {
+                const html = this.renderDuplicateDetailsHtml();
+                if (obj.callback) {
+                    this.sendTo(obj.from, obj.command, html, obj.callback);
                 }
             }
         }
@@ -574,6 +591,116 @@ class Health extends utils.Adapter {
         await this.setStateAsync('stateInspector.details', JSON.stringify(details, null, 2), true);
 
         this.log.info(`State Inspector summary: ${totalIssues} total issues (${orphanedCount} orphaned, ${staleCount} stale, ${duplicateCount} duplicates)`);
+    }
+
+    /**
+     * Render HTML table for orphaned state details.
+     * @returns {string} HTML string
+     */
+    renderOrphanedDetailsHtml() {
+        if (!this.orphanedInspector || this.orphanedInspector.orphanedStates.length === 0) {
+            return '<div style="padding:8px;color:#888;">No orphaned states found.</div>';
+        }
+
+        const MAX = 50;
+        const states = this.orphanedInspector.orphanedStates.slice(0, MAX);
+        const total = this.orphanedInspector.orphanedStates.length;
+
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        html += '<tr style="background:rgba(0,0,0,0.1);"><th style="padding:6px;text-align:left;">State ID</th><th style="padding:6px;text-align:left;">Category</th><th style="padding:6px;text-align:left;">Reason</th></tr>';
+
+        for (const s of states) {
+            html += `<tr style="border-bottom:1px solid rgba(0,0,0,0.1);">`;
+            html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${this.escapeHtml(s.id)}</td>`;
+            html += `<td style="padding:4px 6px;">${this.escapeHtml(s.category)}</td>`;
+            html += `<td style="padding:4px 6px;">${this.escapeHtml(s.reason)}</td>`;
+            html += '</tr>';
+        }
+
+        html += '</table>';
+        if (total > MAX) {
+            html += `<div style="padding:8px;color:#888;font-size:12px;">Showing ${MAX} of ${total} orphaned states.</div>`;
+        }
+        return html;
+    }
+
+    /**
+     * Render HTML table for stale state details.
+     * @returns {string} HTML string
+     */
+    renderStaleDetailsHtml() {
+        if (!this.staleInspector || this.staleInspector.staleStates.length === 0) {
+            return '<div style="padding:8px;color:#888;">No stale states found.</div>';
+        }
+
+        const MAX = 50;
+        const states = this.staleInspector.staleStates.slice(0, MAX);
+        const total = this.staleInspector.staleStates.length;
+
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        html += '<tr style="background:rgba(0,0,0,0.1);"><th style="padding:6px;text-align:left;">State ID</th><th style="padding:6px;text-align:left;">Adapter</th><th style="padding:6px;text-align:left;">Last Update</th><th style="padding:6px;text-align:left;">Age (h)</th></tr>';
+
+        for (const s of states) {
+            html += '<tr style="border-bottom:1px solid rgba(0,0,0,0.1);">';
+            html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${this.escapeHtml(s.id)}</td>`;
+            html += `<td style="padding:4px 6px;">${this.escapeHtml(s.adapter)}</td>`;
+            html += `<td style="padding:4px 6px;">${this.escapeHtml(s.lastUpdate)}</td>`;
+            html += `<td style="padding:4px 6px;">${s.ageHours}</td>`;
+            html += '</tr>';
+        }
+
+        html += '</table>';
+        if (total > MAX) {
+            html += `<div style="padding:8px;color:#888;font-size:12px;">Showing ${MAX} of ${total} stale states.</div>`;
+        }
+        return html;
+    }
+
+    /**
+     * Render HTML table for duplicate state details.
+     * @returns {string} HTML string
+     */
+    renderDuplicateDetailsHtml() {
+        if (!this.duplicateInspector || this.duplicateInspector.duplicates.length === 0) {
+            return '<div style="padding:8px;color:#888;">No duplicate states found.</div>';
+        }
+
+        const MAX = 50;
+        const groups = this.duplicateInspector.duplicates.slice(0, MAX);
+        const total = this.duplicateInspector.duplicates.length;
+
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        html += '<tr style="background:rgba(0,0,0,0.1);"><th style="padding:6px;text-align:left;">#</th><th style="padding:6px;text-align:left;">States</th><th style="padding:6px;text-align:left;">Similarity</th></tr>';
+
+        groups.forEach((group, i) => {
+            const statesStr = (group.states || []).map(s => this.escapeHtml(s)).join('<br>');
+            const similarity = group.similarity ? (group.similarity * 100).toFixed(0) + '%' : '-';
+            html += '<tr style="border-bottom:1px solid rgba(0,0,0,0.1);">';
+            html += `<td style="padding:4px 6px;">${i + 1}</td>`;
+            html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${statesStr}</td>`;
+            html += `<td style="padding:4px 6px;">${similarity}</td>`;
+            html += '</tr>';
+        });
+
+        html += '</table>';
+        if (total > MAX) {
+            html += `<div style="padding:8px;color:#888;font-size:12px;">Showing ${MAX} of ${total} duplicate groups.</div>`;
+        }
+        return html;
+    }
+
+    /**
+     * Escape HTML special characters.
+     * @param {string} str - Input string
+     * @returns {string} Escaped string
+     */
+    escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 
     /**

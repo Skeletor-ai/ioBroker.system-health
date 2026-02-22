@@ -41,7 +41,7 @@
         ],
         "adminUI": {
             "config": "json",
-            "tab": "tab.html"
+            "tab": "jsonTab"
         },
         "adminTab": {
             "singleton": true,
