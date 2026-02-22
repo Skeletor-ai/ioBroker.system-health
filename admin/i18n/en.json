@@ -15,6 +15,8 @@
     "Adapter Crash Detection": "Adapter Crash Detection",
     "Enable adapter crash detection": "Enable adapter crash detection",
     "State Inspector": "State Inspector",
+    "State Inspector ignore patterns": "State Inspector ignore patterns",
+    "State patterns to exclude from all inspections (e.g., system.*, admin.*, mydevice.*)": "State patterns to exclude from all inspections (e.g., system.*, admin.*, mydevice.*)",
     "Enable orphaned state detection": "Enable orphaned state detection",
     "Enable duplicate state detection": "Enable duplicate state detection",
     "Duplicate similarity threshold": "Duplicate similarity threshold",
