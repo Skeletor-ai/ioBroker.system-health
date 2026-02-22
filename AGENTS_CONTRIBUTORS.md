@@ -29,7 +29,10 @@ Read the full issue description:
 gh issue view <NUMBER> --repo Skeletor-ai/ioBroker.system-health
 ```
 
-### 4. Create a Branch & Work
+### 4. Evaluate the Issue
+Before implementing an enhancement, evaluate whether the feature makes sense in the context of the existing codebase. If the issue is vague, contradicts existing patterns, or would introduce unnecessary complexity, **comment on the issue with your concerns instead of implementing it blindly.** Only proceed if the enhancement is clear and reasonable.
+
+### 5. Create a Branch & Work
 ```bash
 git checkout main && git pull
 git checkout -b issue-<NUMBER>-short-description
@@ -43,7 +46,7 @@ Implement the change. Follow these rules:
 - Update README.md if user-facing behavior changes
 - Run `npm test` before submitting
 
-### 5. Test with ioBroker Dev-Server
+### 6. Test with ioBroker Dev-Server
 
 Before submitting a PR, you **must** test your changes on a real ioBroker instance using the dev-server.
 
@@ -80,7 +83,7 @@ kill %1
 
 **If `dev-server` is not available or setup fails, at minimum run `npm test` and document in your PR that dev-server testing was not possible.**
 
-### 6. Submit a Pull Request
+### 7. Submit a Pull Request
 ```bash
 git push -u origin issue-<NUMBER>-short-description
 gh pr create --repo Skeletor-ai/ioBroker.system-health \
@@ -88,14 +91,14 @@ gh pr create --repo Skeletor-ai/ioBroker.system-health \
   --body "Closes #<NUMBER>\n\n<description of changes>"
 ```
 
-### 7. Handle Review Feedback
+### 8. Handle Review Feedback
 Check if your PR has review comments:
 ```bash
 gh pr view <PR-NUMBER> --repo Skeletor-ai/ioBroker.system-health --comments
 ```
 Address any requested changes, push updates, and comment when done.
 
-### 8. Move On
+### 9. Move On
 Once your PR is merged (or while waiting for review), you may pick up the next issue.
 Only work on **one issue at a time**.
 
