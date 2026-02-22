@@ -40,8 +40,7 @@
             }
         ],
         "adminUI": {
-            "config": "json",
-            "tab": "jsonTab"
+            "config": "json"
         },
         "adminTab": {
             "singleton": true,
@@ -49,7 +48,8 @@
                 "en": "System Health",
                 "de": "Systemgesundheit"
             },
-            "fa-icon": "fa-heartbeat"
+            "fa-icon": "fa-heartbeat",
+            "link": "jsonTab.json5"
         }
     },
     "native": {
