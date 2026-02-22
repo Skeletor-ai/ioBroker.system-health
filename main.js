@@ -392,8 +392,10 @@ class Health extends utils.Adapter {
             await this.runStaleDetection();
         }
 
-        // Update summary states
-        await this.updateStateInspectorSummary();
+        // Update summary states only if at least one inspector ran
+        if (this.duplicateInspector || this.orphanedInspector || this.staleInspector) {
+            await this.updateStateInspectorSummary();
+        }
 
         this.log.info('Health checks completed.');
     }
