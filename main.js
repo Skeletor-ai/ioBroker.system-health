@@ -6,6 +6,8 @@ const CpuMonitor = require('./lib/health-checks/cpu-monitor');
 const DiskMonitor = require('./lib/health-checks/disk-monitor');
 const CrashDetection = require('./lib/health-checks/crash-detection');
 const DuplicateStateInspector = require('./lib/state-inspector/duplicate-detection');
+const OrphanedStateInspector = require('./lib/state-inspector/orphaned-states');
+const StaleStateInspector = require('./lib/state-inspector/stale-detection');
 
 class Health extends utils.Adapter {
     /**
@@ -29,6 +31,12 @@ class Health extends utils.Adapter {
         
         /** @type {DuplicateStateInspector|null} */
         this.duplicateInspector = null;
+        
+        /** @type {OrphanedStateInspector|null} */
+        this.orphanedInspector = null;
+        
+        /** @type {StaleStateInspector|null} */
+        this.staleInspector = null;
         
         /** @type {NodeJS.Timeout|null} */
         this.healthCheckInterval = null;
@@ -117,8 +125,8 @@ class Health extends utils.Adapter {
     async getDashboardData() {
         const data = {
             duplicates: [],
-            staleCount: 0,
-            orphanedCount: 0,
+            staleCount: this.staleInspector ? this.staleInspector.staleStates.length : 0,
+            orphanedCount: this.orphanedInspector ? this.orphanedInspector.orphanedStates.length : 0,
             issues: []
         };
 
@@ -275,6 +283,79 @@ class Health extends utils.Adapter {
             },
             native: {},
         });
+
+        // State Inspector summary states
+        await this.setObjectNotExistsAsync('stateInspector.totalIssues', {
+            type: 'state',
+            common: {
+                name: 'Total state inspector issues',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.orphaned', {
+            type: 'state',
+            common: {
+                name: 'Number of orphaned states',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.stale', {
+            type: 'state',
+            common: {
+                name: 'Number of stale states',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.duplicates', {
+            type: 'state',
+            common: {
+                name: 'Number of duplicate state groups',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.details', {
+            type: 'state',
+            common: {
+                name: 'Full state inspector details (JSON)',
+                type: 'string',
+                role: 'json',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.lastScan', {
+            type: 'state',
+            common: {
+                name: 'Last state inspector scan timestamp',
+                type: 'number',
+                role: 'date',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
     }
 
     /**
@@ -303,9 +384,16 @@ class Health extends utils.Adapter {
             await this.runDuplicateDetection();
         }
 
-        // TODO: Other health checks
-        // - Stale state detection
-        // - Orphaned state detection
+        if (config.enableOrphanDetection) {
+            await this.runOrphanDetection();
+        }
+
+        if (config.enableStaleDetection) {
+            await this.runStaleDetection();
+        }
+
+        // Update summary states
+        await this.updateStateInspectorSummary();
 
         this.log.info('Health checks completed.');
     }
@@ -415,6 +503,78 @@ class Health extends utils.Adapter {
     }
 
     /**
+     * Run orphaned state detection.
+     */
+    async runOrphanDetection() {
+        if (!this.orphanedInspector) {
+            const ignoreList = this.config.orphanIgnorePatterns || ['system.*', 'admin.*'];
+            this.orphanedInspector = new OrphanedStateInspector(this, ignoreList);
+            await this.orphanedInspector.init();
+        }
+
+        const report = await this.orphanedInspector.inspect();
+
+        if (report.totalOrphaned > 0) {
+            this.log.warn(`Found ${report.totalOrphaned} orphaned state(s)`);
+        } else {
+            this.log.info('No orphaned states detected');
+        }
+    }
+
+    /**
+     * Run stale state detection.
+     */
+    async runStaleDetection() {
+        if (!this.staleInspector) {
+            const thresholdHours = this.config.staleThresholdHours || 24;
+            const ignorePatterns = this.config.staleIgnorePatterns || [];
+            this.staleInspector = new StaleStateInspector(this, thresholdHours, ignorePatterns);
+            await this.staleInspector.init();
+        }
+
+        const report = await this.staleInspector.inspect();
+
+        if (report.totalStale > 0) {
+            this.log.warn(`Found ${report.totalStale} stale state(s)`);
+        } else {
+            this.log.info('No stale states detected');
+        }
+    }
+
+    /**
+     * Update the stateInspector summary states with counts from all inspectors.
+     */
+    async updateStateInspectorSummary() {
+        const orphanedCount = this.orphanedInspector ? this.orphanedInspector.orphanedStates.length : 0;
+        const staleCount = this.staleInspector ? this.staleInspector.staleStates.length : 0;
+        const duplicateCount = this.duplicateInspector ? this.duplicateInspector.duplicates.length : 0;
+        const totalIssues = orphanedCount + staleCount + duplicateCount;
+
+        await this.setStateAsync('stateInspector.totalIssues', totalIssues, true);
+        await this.setStateAsync('stateInspector.orphaned', orphanedCount, true);
+        await this.setStateAsync('stateInspector.stale', staleCount, true);
+        await this.setStateAsync('stateInspector.duplicates', duplicateCount, true);
+        await this.setStateAsync('stateInspector.lastScan', Date.now(), true);
+
+        const details = {
+            timestamp: new Date().toISOString(),
+            totalIssues,
+            categories: {
+                orphaned: orphanedCount,
+                stale: staleCount,
+                duplicates: duplicateCount
+            },
+            orphanedByCategory: this.orphanedInspector ? this.orphanedInspector.categorizeOrphans() : {},
+            staleByAdapter: this.staleInspector ? this.staleInspector.groupByAdapter() : {},
+            duplicateGroups: this.duplicateInspector ? this.duplicateInspector.duplicates.length : 0
+        };
+
+        await this.setStateAsync('stateInspector.details', JSON.stringify(details, null, 2), true);
+
+        this.log.info(`State Inspector summary: ${totalIssues} total issues (${orphanedCount} orphaned, ${staleCount} stale, ${duplicateCount} duplicates)`);
+    }
+
+    /**
      * @param {() => void} callback
      */
     async onUnload(callback) {
@@ -431,6 +591,12 @@ class Health extends utils.Adapter {
             }
             if (this.duplicateInspector) {
                 await this.duplicateInspector.stop();
+            }
+            if (this.orphanedInspector) {
+                await this.orphanedInspector.cleanup();
+            }
+            if (this.staleInspector) {
+                await this.staleInspector.cleanup();
             }
             this.log.info('ioBroker.system-health stopped.');
             callback();
