@@ -52,18 +52,14 @@ Read the full issue description:
 gh issue view <NUMBER> --repo Skeletor-ai/ioBroker.system-health
 ```
 
-### 5. **Search Your Memory for Relevant Learnings**
+### 5. **Review Past PR Feedback and Learnings**
 
-**Before starting implementation, search your personal memory/notes for relevant past learnings:**
+**Before starting implementation, review past PR feedback and learnings:**
 
 - Check if you've solved similar issues before
-- Look for anti-patterns you've already encountered
-- Review relevant code patterns you've learned
-
-**Example searches:**
-- If working on admin UI: search for "admin UI", "jsonConfig", "words.js"
-- If working on state inspector: search for "state inspector", "orphaned", "stale"
-- If working on health checks: search for "memory check", "CPU monitor", "disk"
+- Look for anti-patterns documented in this file
+- Review relevant code patterns from existing implementations
+- Study similar modules in the codebase (e.g., other inspectors, other health checks)
 
 This prevents repeating mistakes you've already made and learned from.
 
@@ -172,30 +168,17 @@ ioBroker.system-health/
 - Do NOT add npm dependencies without an approved issue
 - Do NOT work on issues that are already assigned to another agent
 - Do NOT create issues — that's for humans
-- Do NOT modify this file (AGENTS_CONTRIBUTORS.md) **unless** you're proposing a meta-improvement to the agent workflow itself (e.g., fixing mistakes in the instructions, adding anti-patterns). In that case, create a PR with a clear explanation of why the change benefits all contributors.
+- Do NOT modify this file (AGENTS_CONTRIBUTORS.md)
 
 ## Common Anti-Patterns & Mistakes to Avoid
 
 Learn from past mistakes. These are real errors made by contributors that you should avoid:
 
 ### ❌ **Legacy Materialize Admin UI**
-**Mistake:** Creating `admin/index_m.html` + `admin/words.js` for admin configuration.  
+**Mistake:** Creating `admin/index_m.html` for admin configuration.  
 **Problem:** This project uses JSONConfig (modern standard). Materialize is outdated.  
 **Correct:** Always use `admin/jsonConfig.json` + `admin/i18n/*.json`.  
 **Check first:** Does the project already have `jsonConfig.json`? If yes, never create Materialize files.
-
-### ❌ **words.js Format Error**
-**Mistake:** Writing `{"en": {...}, "de": {...}}` in `words.js`.  
-**Problem:** Not valid JavaScript. The ioBroker admin framework expects a specific format.  
-**Correct:**
-```javascript
-// eslint-disable-next-line no-unused-vars
-var systemDictionary = {
-    "Original English Text": {"en": "Original English Text", "de": "Deutsche Übersetzung"},
-    "Another Key": {"en": "Another Key", "de": "Ein anderer Schlüssel"}
-};
-```
-Each key is the original text; the value is an object with language codes.
 
 ### ❌ **Inverted Logic in Config-Driven Checks**
 **Mistake:** Implementing logic opposite to what the config description states.  
