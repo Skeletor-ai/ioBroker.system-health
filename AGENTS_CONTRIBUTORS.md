@@ -56,12 +56,13 @@ gh issue view <NUMBER> --repo Skeletor-ai/ioBroker.system-health
 
 **Before starting implementation, review past PR feedback and learnings:**
 
-- Check if you've solved similar issues before
+- Review past PR feedback on this repository to see if you've addressed similar issues
 - Look for anti-patterns documented in this file
-- Review relevant code patterns from existing implementations
+- Check similar existing implementations to understand project patterns
 - Study similar modules in the codebase (e.g., other inspectors, other health checks)
+- Look at how other modules solve similar problems
 
-This prevents repeating mistakes you've already made and learned from.
+This prevents repeating mistakes and ensures consistency with the established codebase patterns.
 
 ### 6. Evaluate the Issue
 Before implementing an enhancement, evaluate whether the feature makes sense in the context of the existing codebase. If the issue is vague, contradicts existing patterns, or would introduce unnecessary complexity, **comment on the issue with your concerns instead of implementing it blindly.** Only proceed if the enhancement is clear and reasonable.
@@ -194,9 +195,9 @@ Learn from past mistakes. These are real errors made by contributors that you sh
 **Problem:** Blocks the review pipeline. Maintainer must wait for you to circle back.  
 **Prevention:** Always check PR comments before new work (Step 1 in workflow).
 
-### ❌ **Not Searching Your Memory**
-**Mistake:** Repeating the same mistake twice (e.g., `words.js` format error made in PR #7 and again in PR #24).  
-**Prevention:** Search your notes/memory for relevant keywords before coding. If you've worked on similar features, review what you learned.
+### ❌ **Not Reviewing Past Mistakes**
+**Mistake:** Repeating the same mistake twice (e.g., inverted threshold logic error or missing jsonConfig UI element).  
+**Prevention:** Review past PR feedback on this repository and check similar existing implementations before coding. If you've worked on similar features, study what you learned from review comments.
 
 ### ✅ **Good Patterns to Follow**
 - **Analyze existing code first:** Look at similar files (e.g., other inspectors, other monitors) to understand the project's patterns.
