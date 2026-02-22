@@ -239,7 +239,7 @@ describe('DuplicateStateInspector', () => {
                 }]
             ]);
 
-            const duplicates = inspector.detectNamingDuplicates(stateMap);
+            const duplicates = await inspector.detectNamingDuplicates(stateMap);
 
             assert.ok(duplicates.length > 0);
             assert.strictEqual(duplicates[0].type, 'naming');
@@ -271,7 +271,7 @@ describe('DuplicateStateInspector', () => {
                 }]
             ]);
 
-            const duplicates = inspector.detectNamingDuplicates(stateMap);
+            const duplicates = await inspector.detectNamingDuplicates(stateMap);
 
             assert.strictEqual(duplicates.length, 0);
         });
