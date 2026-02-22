@@ -137,6 +137,7 @@
             "type": "textSendTo",
             "container": "html",
             "command": "getOrphanedDetails",
+            "jsonData": "{\"lang\": \"${systemLang}\"}",
             "sm": 12
         },
 
@@ -151,6 +152,7 @@
             "type": "textSendTo",
             "container": "html",
             "command": "getStaleDetails",
+            "jsonData": "{\"lang\": \"${systemLang}\"}",
             "sm": 12
         },
 
@@ -165,6 +167,7 @@
             "type": "textSendTo",
             "container": "html",
             "command": "getDuplicateDetails",
+            "jsonData": "{\"lang\": \"${systemLang}\"}",
             "sm": 12
         }
     }
