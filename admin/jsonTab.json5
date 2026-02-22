@@ -169,6 +169,41 @@
             "command": "getDuplicateDetails",
             "jsonData": "{\"lang\": \"${systemLang}\"}",
             "sm": 12
+        },
+
+        // === Cleanup Suggestions Section ===
+        "_cleanupHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "cleanupSuggestions",
+            "size": 3
+        },
+        "_cleanupDescription": {
+            "newLine": true,
+            "type": "text",
+            "text": "cleanupDescription",
+            "sm": 12
+        },
+        "_safeToDeleteCount": {
+            "newLine": true,
+            "type": "state",
+            "oid": "stateInspector.safeToDeleteCount",
+            "label": "safeToDelete",
+            "sm": 6
+        },
+        "_reviewRequiredCount": {
+            "type": "state",
+            "oid": "stateInspector.reviewRequiredCount",
+            "label": "reviewRequired",
+            "sm": 6
+        },
+        "_cleanupDetails": {
+            "newLine": true,
+            "type": "textSendTo",
+            "container": "html",
+            "command": "getCleanupSuggestions",
+            "jsonData": "{\"lang\": \"${systemLang}\"}",
+            "sm": 12
         }
     }
 }

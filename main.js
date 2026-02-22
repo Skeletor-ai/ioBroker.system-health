@@ -122,6 +122,12 @@ class Health extends utils.Adapter {
                 if (obj.callback) {
                     this.sendTo(obj.from, obj.command, html, obj.callback);
                 }
+            } else if (command === 'getCleanupSuggestions') {
+                const lang = (obj.message && obj.message.lang) || 'en';
+                const html = await this.renderCleanupSuggestionsHtml(lang);
+                if (obj.callback) {
+                    this.sendTo(obj.from, obj.command, html, obj.callback);
+                }
             }
         }
     }
@@ -291,6 +297,43 @@ class Health extends utils.Adapter {
                 name: 'Last state inspector scan timestamp',
                 type: 'number',
                 role: 'date',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        // Cleanup suggestions states
+        await this.setObjectNotExistsAsync('stateInspector.cleanupSuggestions', {
+            type: 'state',
+            common: {
+                name: 'State cleanup suggestions',
+                type: 'string',
+                role: 'json',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.safeToDeleteCount', {
+            type: 'state',
+            common: {
+                name: 'States safe to delete (count)',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.reviewRequiredCount', {
+            type: 'state',
+            common: {
+                name: 'States requiring review (count)',
+                type: 'number',
+                role: 'value',
                 read: true,
                 write: false,
             },
@@ -513,7 +556,35 @@ class Health extends utils.Adapter {
 
         await this.setStateAsync('stateInspector.details', JSON.stringify(details, null, 2), true);
 
+        // Collect cleanup suggestions from all inspectors
+        const cleanupSuggestions = {
+            timestamp: new Date().toISOString(),
+            safeToDelete: [],
+            reviewRequired: [],
+            keepForNow: []
+        };
+
+        if (this.orphanedInspector) {
+            const orphanSuggestions = this.orphanedInspector.getCleanupSuggestions();
+            cleanupSuggestions.safeToDelete.push(...orphanSuggestions.safeToDelete);
+            cleanupSuggestions.reviewRequired.push(...orphanSuggestions.reviewRequired);
+            cleanupSuggestions.keepForNow.push(...orphanSuggestions.keepForNow);
+        }
+
+        if (this.staleInspector) {
+            const staleSuggestions = this.staleInspector.getCleanupSuggestions();
+            cleanupSuggestions.safeToDelete.push(...staleSuggestions.safeToDelete);
+            cleanupSuggestions.reviewRequired.push(...staleSuggestions.reviewRequired);
+            cleanupSuggestions.keepForNow.push(...staleSuggestions.keepForNow);
+        }
+
+        // Update cleanup suggestion states
+        await this.setStateAsync('stateInspector.cleanupSuggestions', JSON.stringify(cleanupSuggestions, null, 2), true);
+        await this.setStateAsync('stateInspector.safeToDeleteCount', cleanupSuggestions.safeToDelete.length, true);
+        await this.setStateAsync('stateInspector.reviewRequiredCount', cleanupSuggestions.reviewRequired.length, true);
+
         this.log.info(`State Inspector summary: ${totalIssues} total issues (${orphanedCount} orphaned, ${staleCount} stale, ${duplicateCount} duplicates)`);
+        this.log.info(`Cleanup suggestions: ${cleanupSuggestions.safeToDelete.length} safe to delete, ${cleanupSuggestions.reviewRequired.length} review required`);
     }
 
     /**
@@ -527,6 +598,7 @@ class Health extends utils.Adapter {
             'noOrphanedStates': { en: 'No orphaned states found.', de: 'Keine verwaisten States gefunden.' },
             'noStaleStates': { en: 'No stale states found.', de: 'Keine veralteten States gefunden.' },
             'noDuplicates': { en: 'No duplicate states found.', de: 'Keine Duplikate gefunden.' },
+            'noCleanupSuggestions': { en: 'No cleanup suggestions available.', de: 'Keine Bereinigungsvorschläge verfügbar.' },
             'stateId': { en: 'State ID', de: 'State ID' },
             'category': { en: 'Category', de: 'Kategorie' },
             'reason': { en: 'Reason', de: 'Grund' },
@@ -536,6 +608,12 @@ class Health extends utils.Adapter {
             'states': { en: 'States', de: 'States' },
             'similarity': { en: 'Similarity', de: 'Ähnlichkeit' },
             'showingXofY': { en: 'Showing {0} of {1}', de: 'Zeige {0} von {1}' },
+            'safeToDelete': { en: 'Safe to Delete', de: 'Sicher zu löschen' },
+            'reviewRequired': { en: 'Review Required', de: 'Überprüfung erforderlich' },
+            'safeToDeleteDescription': { en: 'These states are likely obsolete and can be safely deleted.', de: 'Diese States sind wahrscheinlich veraltet und können sicher gelöscht werden.' },
+            'reviewRequiredDescription': { en: 'These states should be reviewed before deletion.', de: 'Diese States sollten vor dem Löschen überprüft werden.' },
+            'warning': { en: 'Warning', de: 'Warnung' },
+            'cleanupWarning': { en: 'This is a report-only feature. No states will be deleted automatically. Always backup your ioBroker system before manually deleting states.', de: 'Dies ist nur ein Bericht. Es werden keine States automatisch gelöscht. Erstellen Sie immer ein Backup Ihres ioBroker-Systems, bevor Sie States manuell löschen.' },
         };
         const entry = translations[key];
         if (!entry) return key;
@@ -653,6 +731,84 @@ class Health extends utils.Adapter {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    }
+
+    /**
+     * Render HTML for cleanup suggestions.
+     * @param {string} [lang] - Language code
+     * @returns {string} HTML string
+     */
+    async renderCleanupSuggestionsHtml(lang = 'en') {
+        // Read cleanup suggestions from state
+        const suggestionsState = await this.getStateAsync('stateInspector.cleanupSuggestions');
+        
+        if (!suggestionsState || !suggestionsState.val) {
+            return `<div style="padding:8px;opacity:0.6;">${this.t('noCleanupSuggestions', lang)}</div>`;
+        }
+
+        let suggestions;
+        try {
+            suggestions = JSON.parse(suggestionsState.val);
+        } catch (e) {
+            return `<div style="padding:8px;opacity:0.6;color:red;">Error parsing cleanup suggestions</div>`;
+        }
+
+        if (suggestions.safeToDelete.length === 0 && suggestions.reviewRequired.length === 0) {
+            return `<div style="padding:8px;opacity:0.6;">${this.t('noCleanupSuggestions', lang)}</div>`;
+        }
+
+        let html = '<div style="font-size:13px;">';
+
+        // Safe to delete section
+        if (suggestions.safeToDelete.length > 0) {
+            html += `<div style="margin-bottom:20px;">`;
+            html += `<h4 style="margin:8px 0;color:#4caf50;">${this.t('safeToDelete', lang)} (${suggestions.safeToDelete.length})</h4>`;
+            html += `<p style="font-size:12px;opacity:0.7;margin:4px 0 8px 0;">${this.t('safeToDeleteDescription', lang)}</p>`;
+            html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+            html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('reason', lang)}</th></tr>`;
+            
+            const MAX = 20;
+            for (const s of suggestions.safeToDelete.slice(0, MAX)) {
+                html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
+                html += `<td style="padding:4px 6px;font-family:monospace;">${this.escapeHtml(s.id)}</td>`;
+                html += `<td style="padding:4px 6px;">${this.escapeHtml(s.reason)}</td>`;
+                html += '</tr>';
+            }
+            html += '</table>';
+            if (suggestions.safeToDelete.length > MAX) {
+                html += `<div style="padding:8px;opacity:0.6;font-size:11px;">${this.t('showingXofY', lang).replace('{0}', MAX).replace('{1}', suggestions.safeToDelete.length)}</div>`;
+            }
+            html += '</div>';
+        }
+
+        // Review required section
+        if (suggestions.reviewRequired.length > 0) {
+            html += `<div style="margin-bottom:20px;">`;
+            html += `<h4 style="margin:8px 0;color:#ff9800;">${this.t('reviewRequired', lang)} (${suggestions.reviewRequired.length})</h4>`;
+            html += `<p style="font-size:12px;opacity:0.7;margin:4px 0 8px 0;">${this.t('reviewRequiredDescription', lang)}</p>`;
+            html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+            html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('reason', lang)}</th></tr>`;
+            
+            const MAX = 20;
+            for (const s of suggestions.reviewRequired.slice(0, MAX)) {
+                html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
+                html += `<td style="padding:4px 6px;font-family:monospace;">${this.escapeHtml(s.id)}</td>`;
+                html += `<td style="padding:4px 6px;">${this.escapeHtml(s.reason)}</td>`;
+                html += '</tr>';
+            }
+            html += '</table>';
+            if (suggestions.reviewRequired.length > MAX) {
+                html += `<div style="padding:8px;opacity:0.6;font-size:11px;">${this.t('showingXofY', lang).replace('{0}', MAX).replace('{1}', suggestions.reviewRequired.length)}</div>`;
+            }
+            html += '</div>';
+        }
+
+        html += `<div style="padding:12px;background:rgba(255,193,7,0.1);border-left:3px solid #ff9800;margin-top:16px;font-size:12px;">`;
+        html += `<strong>⚠️ ${this.t('warning', lang)}:</strong> ${this.t('cleanupWarning', lang)}`;
+        html += `</div>`;
+
+        html += '</div>';
+        return html;
     }
 
     /**
