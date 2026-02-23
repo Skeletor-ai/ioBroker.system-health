@@ -127,11 +127,13 @@
             "hidden": "!data.enableStaleDetection"
         },
         "stateInspectorIgnorePatterns": {
+            "newLine": true,
             "type": "chips",
             "label": "State Inspector ignore patterns",
             "help": "State patterns to exclude from all inspections (e.g., system.*, admin.*, mydevice.*)",
             "delimiter": ",",
-            "sm": 12
+            "sm": 12,
+            "default": []
         }
     }
 }

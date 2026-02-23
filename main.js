@@ -486,7 +486,7 @@ class Health extends utils.Adapter {
     async runDuplicateDetection() {
         if (!this.duplicateInspector) {
             const threshold = this.config.duplicateSimilarityThreshold || 0.9;
-            const ignorePatterns = this.config.stateInspectorIgnorePatterns || [];
+            const ignorePatterns = this._parseIgnorePatterns(this.config.stateInspectorIgnorePatterns);
             this.duplicateInspector = new DuplicateStateInspector(this, threshold, ignorePatterns);
             await this.duplicateInspector.init();
         }
@@ -505,7 +505,7 @@ class Health extends utils.Adapter {
      */
     async runOrphanDetection() {
         if (!this.orphanedInspector) {
-            const ignorePatterns = this.config.stateInspectorIgnorePatterns || [];
+            const ignorePatterns = this._parseIgnorePatterns(this.config.stateInspectorIgnorePatterns);
             this.orphanedInspector = new OrphanedStateInspector(this, ignorePatterns);
             await this.orphanedInspector.init();
         }
@@ -525,7 +525,7 @@ class Health extends utils.Adapter {
     async runStaleDetection() {
         if (!this.staleInspector) {
             const thresholdHours = this.config.staleThresholdHours || 24;
-            const ignorePatterns = this.config.stateInspectorIgnorePatterns || [];
+            const ignorePatterns = this._parseIgnorePatterns(this.config.stateInspectorIgnorePatterns);
             this.staleInspector = new StaleStateInspector(this, thresholdHours, ignorePatterns);
             await this.staleInspector.init();
         }
@@ -868,6 +868,26 @@ class Health extends utils.Adapter {
         } catch {
             callback();
         }
+    }
+
+    /**
+     * Parse ignore patterns from config.
+     * Handles both array and string (comma/newline delimited) formats.
+     * @param {string|string[]|null|undefined} patterns
+     * @returns {string[]}
+     */
+    _parseIgnorePatterns(patterns) {
+        if (Array.isArray(patterns)) {
+            return patterns.filter(p => typeof p === 'string' && p.trim()).map(p => p.trim());
+        }
+        if (typeof patterns === 'string' && patterns.trim()) {
+            // Split by comma or newline
+            return patterns
+                .split(/[,\n]/)
+                .map(p => p.trim())
+                .filter(p => p);
+        }
+        return [];
     }
 }
 
