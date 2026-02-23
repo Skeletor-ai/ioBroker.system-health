@@ -44,6 +44,10 @@ class MockAdapter {
         return result;
     }
 
+    async getForeignObjectAsync(id) {
+        return this.objects[id] || null;
+    }
+
     async subscribeForeignStatesAsync(id) {
         this.subscriptions.add(id);
     }
@@ -102,6 +106,12 @@ describe('CrashDetection', () => {
             const crashDetection = new CrashDetection(adapter, 30);
             await crashDetection.init();
 
+            // Set up instance object
+            adapter.objects['system.adapter.test.0'] = {
+                type: 'instance',
+                common: { mode: 'daemon', enabled: true }
+            };
+
             // Simulate crash (js-controller sets ack=true when detecting crashes)
             await crashDetection.onAliveStateChange(
                 'system.adapter.test.0.alive',
@@ -113,6 +123,68 @@ describe('CrashDetection', () => {
 
             assert.ok(adapter.log.warn.mock.calls.some(
                 call => call.arguments[0].includes('Detected potential crash')
+            ));
+        });
+
+        it('should ignore scheduled adapters that stop normally', async () => {
+            const adapter = new MockAdapter();
+            const crashDetection = new CrashDetection(adapter, 30);
+            await crashDetection.init();
+
+            // Set up scheduled adapter instance
+            adapter.objects['system.adapter.ical.0'] = {
+                type: 'instance',
+                common: { mode: 'schedule', enabled: true }
+            };
+
+            // Simulate scheduled stop (alive=false)
+            await crashDetection.onAliveStateChange(
+                'system.adapter.ical.0.alive',
+                { val: false, ack: true }
+            );
+
+            // Wait for async processing
+            await new Promise(resolve => setTimeout(resolve, 2100));
+
+            // Should NOT log a crash warning
+            assert.ok(!adapter.log.warn.mock.calls.some(
+                call => call.arguments[0].includes('Detected potential crash')
+            ));
+
+            // Should log debug message
+            assert.ok(adapter.log.debug.mock.calls.some(
+                call => call.arguments[0].includes('Ignoring alive=false for scheduled adapter')
+            ));
+        });
+
+        it('should ignore disabled adapters', async () => {
+            const adapter = new MockAdapter();
+            const crashDetection = new CrashDetection(adapter, 30);
+            await crashDetection.init();
+
+            // Set up disabled adapter instance
+            adapter.objects['system.adapter.test.0'] = {
+                type: 'instance',
+                common: { mode: 'daemon', enabled: false }
+            };
+
+            // Simulate stop
+            await crashDetection.onAliveStateChange(
+                'system.adapter.test.0.alive',
+                { val: false, ack: true }
+            );
+
+            // Wait for async processing
+            await new Promise(resolve => setTimeout(resolve, 2100));
+
+            // Should NOT log a crash warning
+            assert.ok(!adapter.log.warn.mock.calls.some(
+                call => call.arguments[0].includes('Detected potential crash')
+            ));
+
+            // Should log debug message
+            assert.ok(adapter.log.debug.mock.calls.some(
+                call => call.arguments[0].includes('Ignoring alive=false for disabled adapter')
             ));
         });
 
