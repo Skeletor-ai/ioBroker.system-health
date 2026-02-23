@@ -85,6 +85,15 @@ describe('OrphanedStateInspector', () => {
             assert.strictEqual(inspector.shouldIgnore('test.0.info.connection'), true);
             assert.strictEqual(inspector.shouldIgnore('test.0.state'), false);
         });
+
+        it('should ignore 0_userdata states by default', () => {
+            const adapter = new MockAdapter();
+            const inspector = new OrphanedStateInspector(adapter, []);
+
+            assert.strictEqual(inspector.shouldIgnore('0_userdata.0.mydata'), true);
+            assert.strictEqual(inspector.shouldIgnore('0_userdata.0.sensors.temperature'), true);
+            assert.strictEqual(inspector.shouldIgnore('zigbee.0.state'), false);
+        });
     });
 
     describe('adapter instance detection', () => {
