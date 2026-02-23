@@ -303,6 +303,18 @@ class Health extends utils.Adapter {
             native: {},
         });
 
+        await this.setObjectNotExistsAsync('stateInspector.lastScanFormatted', {
+            type: 'state',
+            common: {
+                name: 'Last state inspector scan (human readable)',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
         // Cleanup suggestions states
         await this.setObjectNotExistsAsync('stateInspector.cleanupSuggestions', {
             type: 'state',
@@ -540,7 +552,18 @@ class Health extends utils.Adapter {
         await this.setStateAsync('stateInspector.orphaned', orphanedCount, true);
         await this.setStateAsync('stateInspector.stale', staleCount, true);
         await this.setStateAsync('stateInspector.duplicates', duplicateCount, true);
-        await this.setStateAsync('stateInspector.lastScan', Date.now(), true);
+        
+        const now = Date.now();
+        await this.setStateAsync('stateInspector.lastScan', now, true);
+        await this.setStateAsync('stateInspector.lastScanFormatted', new Date(now).toLocaleString('en-GB', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }), true);
 
         const details = {
             timestamp: new Date().toISOString(),
