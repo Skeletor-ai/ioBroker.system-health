@@ -131,6 +131,7 @@
             "label": "State Inspector ignore patterns",
             "help": "State patterns to exclude from all inspections (e.g., system.*, admin.*, mydevice.*)",
             "delimiter": ",",
+            "newValue": true,
             "sm": 12
         }
     }
