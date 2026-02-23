@@ -50,5 +50,8 @@
     "safeToDelete": "Safe to Delete",
     "reviewRequired": "Review Required",
     "noDataAvailable": "No data available. Run a health check first.",
-    "noIssuesFound": "No issues found."
+    "noIssuesFound": "No issues found.",
+    "filterByCategory": "Filter by category",
+    "filterByAdapter": "Filter by adapter",
+    "all": "All"
 }
