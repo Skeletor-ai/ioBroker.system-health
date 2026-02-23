@@ -178,12 +178,6 @@
             "text": "cleanupSuggestions",
             "size": 3
         },
-        "_cleanupDescription": {
-            "newLine": true,
-            "type": "text",
-            "text": "cleanupDescription",
-            "sm": 12
-        },
         "_safeToDeleteCount": {
             "newLine": true,
             "type": "state",
