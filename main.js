@@ -704,7 +704,11 @@ class Health extends utils.Adapter {
         html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">#</th><th style="padding:6px;text-align:left;">${this.t('states', lang)}</th><th style="padding:6px;text-align:left;">${this.t('similarity', lang)}</th></tr>`;
 
         groups.forEach((group, i) => {
-            const statesStr = (group.states || []).map(s => this.escapeHtml(s)).join('<br>');
+            const statesStr = (group.states || []).map(s => {
+                // Handle both string IDs and state objects
+                const id = typeof s === 'string' ? s : s.id;
+                return this.escapeHtml(id);
+            }).join('<br>');
             const similarity = group.similarity ? (group.similarity * 100).toFixed(0) + '%' : '-';
             html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
             html += `<td style="padding:4px 6px;">${i + 1}</td>`;
