@@ -656,18 +656,21 @@ class Health extends utils.Adapter {
 
         const states = this.orphanedInspector.orphanedStates;
         const total = states.length;
+        const DISPLAY_LIMIT = 200;
+        const displayStates = states.slice(0, DISPLAY_LIMIT);
+        const hasMore = states.length > DISPLAY_LIMIT;
 
         // Collect unique categories
         const categories = [...new Set(states.map(s => s.category))].sort();
 
-        // Build category filter buttons
+        // Build category filter buttons with data-filter attributes
         let html = '<div style="margin-bottom:12px;padding:8px;background:rgba(128,128,128,0.05);border-radius:4px;">';
         html += `<span style="margin-right:8px;opacity:0.7;font-weight:bold;">${this.t('filterByCategory', lang) || 'Filter by category'}:</span>`;
-        html += `<button onclick="filterOrphanedTable('')" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.t('all', lang) || 'All'} (${total})</button>`;
+        html += `<button data-filter="" class="filter-orphaned-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.t('all', lang) || 'All'} (${total})</button>`;
         
         for (const cat of categories) {
             const count = states.filter(s => s.category === cat).length;
-            html += `<button onclick="filterOrphanedTable('${this.escapeHtml(cat)}')" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.escapeHtml(cat)} (${count})</button>`;
+            html += `<button data-filter="${this.escapeHtml(cat)}" class="filter-orphaned-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.escapeHtml(cat)} (${count})</button>`;
         }
         html += '</div>';
 
@@ -675,7 +678,7 @@ class Health extends utils.Adapter {
         html += '<table id="orphanedTable" style="width:100%;border-collapse:collapse;font-size:13px;">';
         html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('category', lang)}</th><th style="padding:6px;text-align:left;">${this.t('reason', lang)}</th></tr>`;
 
-        for (const s of states) {
+        for (const s of displayStates) {
             html += `<tr class="orphaned-row" data-category="${this.escapeHtml(s.category)}" style="border-bottom:1px solid rgba(128,128,128,0.2);">`;
             html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${this.escapeHtml(s.id)}</td>`;
             html += `<td style="padding:4px 6px;">${this.escapeHtml(s.category)}</td>`;
@@ -685,37 +688,12 @@ class Health extends utils.Adapter {
 
         html += '</table>';
 
-        // Add client-side filtering script
-        html += `
-<script>
-function filterOrphanedTable(category) {
-    const rows = document.querySelectorAll('.orphaned-row');
-    let visibleCount = 0;
-    rows.forEach(row => {
-        if (category === '' || row.dataset.category === category) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
+        if (hasMore) {
+            html += `<div style="padding:8px;opacity:0.6;font-style:italic;">${this.t('showingFirst', lang) || 'Showing first'} ${DISPLAY_LIMIT} ${this.t('of', lang) || 'of'} ${total} ${this.t('states', lang) || 'states'}. ${this.t('useFilters', lang) || 'Use filters to narrow down results'}.</div>`;
         }
-    });
-    
-    // Update button styles to highlight active filter
-    const buttons = document.querySelectorAll('button[onclick^="filterOrphanedTable"]');
-    buttons.forEach(btn => {
-        if ((category === '' && btn.textContent.includes('${this.t('all', lang) || 'All'}')) ||
-            (category !== '' && btn.textContent.includes(category))) {
-            btn.style.background = '#1976d2';
-            btn.style.color = '#fff';
-            btn.style.fontWeight = 'bold';
-        } else {
-            btn.style.background = '#fff';
-            btn.style.color = '#000';
-            btn.style.fontWeight = 'normal';
-        }
-    });
-}
-</script>`;
+
+        // Add client-side filtering script using event delegation
+        html += this.renderTableFilterScript('orphaned');
 
         return html;
     }
@@ -732,18 +710,21 @@ function filterOrphanedTable(category) {
 
         const states = this.staleInspector.staleStates;
         const total = states.length;
+        const DISPLAY_LIMIT = 200;
+        const displayStates = states.slice(0, DISPLAY_LIMIT);
+        const hasMore = states.length > DISPLAY_LIMIT;
 
         // Collect unique adapters
         const adapters = [...new Set(states.map(s => s.adapter))].sort();
 
-        // Build adapter filter buttons
+        // Build adapter filter buttons with data-filter attributes
         let html = '<div style="margin-bottom:12px;padding:8px;background:rgba(128,128,128,0.05);border-radius:4px;">';
         html += `<span style="margin-right:8px;opacity:0.7;font-weight:bold;">${this.t('filterByAdapter', lang) || 'Filter by adapter'}:</span>`;
-        html += `<button onclick="filterStaleTable('')" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.t('all', lang) || 'All'} (${total})</button>`;
+        html += `<button data-filter="" class="filter-stale-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.t('all', lang) || 'All'} (${total})</button>`;
         
         for (const adapter of adapters) {
             const count = states.filter(s => s.adapter === adapter).length;
-            html += `<button onclick="filterStaleTable('${this.escapeHtml(adapter)}')" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.escapeHtml(adapter)} (${count})</button>`;
+            html += `<button data-filter="${this.escapeHtml(adapter)}" class="filter-stale-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.escapeHtml(adapter)} (${count})</button>`;
         }
         html += '</div>';
 
@@ -751,7 +732,7 @@ function filterOrphanedTable(category) {
         html += '<table id="staleTable" style="width:100%;border-collapse:collapse;font-size:13px;">';
         html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('adapter', lang)}</th><th style="padding:6px;text-align:left;">${this.t('lastUpdate', lang)}</th><th style="padding:6px;text-align:left;">${this.t('ageHours', lang)}</th></tr>`;
 
-        for (const s of states) {
+        for (const s of displayStates) {
             html += `<tr class="stale-row" data-adapter="${this.escapeHtml(s.adapter)}" style="border-bottom:1px solid rgba(128,128,128,0.2);">`;
             html += `<td style="padding:4px 6px;font-family:monospace;font-size:12px;">${this.escapeHtml(s.id)}</td>`;
             html += `<td style="padding:4px 6px;">${this.escapeHtml(s.adapter)}</td>`;
@@ -762,39 +743,64 @@ function filterOrphanedTable(category) {
 
         html += '</table>';
 
-        // Add client-side filtering script
-        html += `
-<script>
-function filterStaleTable(adapter) {
-    const rows = document.querySelectorAll('.stale-row');
-    let visibleCount = 0;
-    rows.forEach(row => {
-        if (adapter === '' || row.dataset.adapter === adapter) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
+        if (hasMore) {
+            html += `<div style="padding:8px;opacity:0.6;font-style:italic;">${this.t('showingFirst', lang) || 'Showing first'} ${DISPLAY_LIMIT} ${this.t('of', lang) || 'of'} ${total} ${this.t('states', lang) || 'states'}. ${this.t('useFilters', lang) || 'Use filters to narrow down results'}.</div>`;
         }
-    });
-    
-    // Update button styles to highlight active filter
-    const buttons = document.querySelectorAll('button[onclick^="filterStaleTable"]');
-    buttons.forEach(btn => {
-        if ((adapter === '' && btn.textContent.includes('${this.t('all', lang) || 'All'}')) ||
-            (adapter !== '' && btn.textContent.includes(adapter))) {
-            btn.style.background = '#1976d2';
-            btn.style.color = '#fff';
-            btn.style.fontWeight = 'bold';
-        } else {
-            btn.style.background = '#fff';
-            btn.style.color = '#000';
-            btn.style.fontWeight = 'normal';
-        }
-    });
-}
-</script>`;
+
+        // Add client-side filtering script using event delegation
+        html += this.renderTableFilterScript('stale');
 
         return html;
+    }
+
+    /**
+     * Shared helper for table filtering scripts.
+     * @param {string} type - 'orphaned' or 'stale'
+     * @returns {string} HTML script tag
+     */
+    renderTableFilterScript(type) {
+        const rowClass = type === 'orphaned' ? 'orphaned-row' : 'stale-row';
+        const dataAttr = type === 'orphaned' ? 'category' : 'adapter';
+        const btnClass = type === 'orphaned' ? 'filter-orphaned-btn' : 'filter-stale-btn';
+        
+        return `
+<script>
+(function() {
+    const buttons = document.querySelectorAll('.${btnClass}');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filterValue = this.getAttribute('data-filter');
+            const rows = document.querySelectorAll('.${rowClass}');
+            
+            rows.forEach(row => {
+                const rowValue = row.getAttribute('data-${dataAttr}');
+                if (filterValue === '' || rowValue === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update button styles
+            buttons.forEach(b => {
+                if (b === this) {
+                    b.style.background = '#1976d2';
+                    b.style.color = '#fff';
+                    b.style.fontWeight = 'bold';
+                } else {
+                    b.style.background = '#fff';
+                    b.style.color = '#000';
+                    b.style.fontWeight = 'normal';
+                }
+            });
+        });
+    });
+    
+    // Trigger "All" filter on load
+    const allBtn = document.querySelector('.${btnClass}[data-filter=""]');
+    if (allBtn) allBtn.click();
+})();
+</script>`;
     }
 
     /**
