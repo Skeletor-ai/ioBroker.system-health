@@ -5,6 +5,7 @@ const MemoryMonitor = require('./lib/health-checks/memory-monitor');
 const CpuMonitor = require('./lib/health-checks/cpu-monitor');
 const DiskMonitor = require('./lib/health-checks/disk-monitor');
 const CrashDetection = require('./lib/health-checks/crash-detection');
+const LogMonitor = require('./lib/health-checks/log-monitor');
 const DuplicateStateInspector = require('./lib/state-inspector/duplicate-detection');
 const OrphanedStateInspector = require('./lib/state-inspector/orphaned-states');
 const StaleStateInspector = require('./lib/state-inspector/stale-detection');
@@ -28,6 +29,9 @@ class Health extends utils.Adapter {
         
         /** @type {CrashDetection|null} */
         this.crashDetection = null;
+        
+        /** @type {LogMonitor|null} */
+        this.logMonitor = null;
         
         /** @type {DuplicateStateInspector|null} */
         this.duplicateInspector = null;
@@ -230,6 +234,83 @@ class Health extends utils.Adapter {
             native: {},
         });
 
+        // Log monitoring states
+        await this.setObjectNotExistsAsync('logs.totalErrors', {
+            type: 'state',
+            common: {
+                name: 'Total error count',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('logs.totalWarnings', {
+            type: 'state',
+            common: {
+                name: 'Total warning count',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('logs.instanceCount', {
+            type: 'state',
+            common: {
+                name: 'Number of instances with errors/warnings',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('logs.status', {
+            type: 'state',
+            common: {
+                name: 'Log monitoring status',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+                states: {
+                    ok: 'OK',
+                    warning: 'Errors/warnings detected',
+                },
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('logs.timestamp', {
+            type: 'state',
+            common: {
+                name: 'Last log check timestamp',
+                type: 'number',
+                role: 'date',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('logs.details', {
+            type: 'state',
+            common: {
+                name: 'Detailed log statistics (JSON)',
+                type: 'string',
+                role: 'json',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
         // State Inspector summary states
         await this.setObjectNotExistsAsync('stateInspector.totalIssues', {
             type: 'state',
@@ -374,6 +455,11 @@ class Health extends utils.Adapter {
             await this.runDiskCheck();
         }
 
+        // Log monitoring
+        if (config.enableLogMonitoring) {
+            await this.runLogCheck();
+        }
+
         // State inspector checks
         if (config.enableDuplicateDetection) {
             await this.runDuplicateDetection();
@@ -478,6 +564,41 @@ class Health extends utils.Adapter {
         await this.diskMonitor.measure();
 
         this.log.info('Disk check completed.');
+    }
+
+    /**
+     * Run log monitoring check.
+     */
+    async runLogCheck() {
+        if (!this.logMonitor) {
+            this.logMonitor = new LogMonitor(this, {
+                maxLogLines: this.config.logMaxLines || 1000,
+                trackingWindowHours: this.config.logTrackingWindowHours || 24,
+            });
+        }
+
+        const result = await this.logMonitor.check();
+
+        // Update states
+        await this.setStateAsync('logs.totalErrors', result.summary.totalErrors, true);
+        await this.setStateAsync('logs.totalWarnings', result.summary.totalWarnings, true);
+        await this.setStateAsync('logs.instanceCount', result.summary.instanceCount, true);
+        await this.setStateAsync('logs.status', result.status, true);
+        await this.setStateAsync('logs.timestamp', result.timestamp, true);
+
+        // Store detailed data as JSON
+        await this.setStateAsync('logs.details', JSON.stringify(result.instances), true);
+
+        // Log results
+        if (result.summary.totalErrors > 0 || result.summary.totalWarnings > 0) {
+            this.log.warn(
+                `Log check: ${result.summary.totalErrors} errors, ${result.summary.totalWarnings} warnings across ${result.summary.instanceCount} instances`
+            );
+        } else {
+            this.log.info('Log check: No errors or warnings detected');
+        }
+
+        this.log.info('Log check completed.');
     }
 
     /**

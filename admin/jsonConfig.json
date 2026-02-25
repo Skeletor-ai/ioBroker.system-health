@@ -82,6 +82,38 @@
             "sm": 6
         },
 
+        "_logHeader": {
+            "type": "header",
+            "text": "Log Monitoring",
+            "size": 3
+        },
+        "enableLogMonitoring": {
+            "type": "checkbox",
+            "label": "Enable log error/warning monitoring",
+            "default": true,
+            "sm": 6
+        },
+        "logMaxLines": {
+            "type": "number",
+            "label": "Max log lines to analyze",
+            "help": "Number of recent log lines to scan",
+            "min": 100,
+            "max": 5000,
+            "default": 1000,
+            "sm": 6,
+            "hidden": "!data.enableLogMonitoring"
+        },
+        "logTrackingWindowHours": {
+            "type": "number",
+            "label": "Log tracking window (hours)",
+            "help": "Only count errors/warnings from the last N hours",
+            "min": 1,
+            "max": 168,
+            "default": 24,
+            "sm": 6,
+            "hidden": "!data.enableLogMonitoring"
+        },
+
         "_stateHeader": {
             "type": "header",
             "text": "State Inspector",
