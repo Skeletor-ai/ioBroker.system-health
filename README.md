@@ -31,7 +31,9 @@
 - Track disk usage with trend analysis and low-space alerts
 
 #### Stale State Detection
-- Monitor states for expected update intervals and alert when they become stale
+- Detect writable states that haven't been updated for a configurable time threshold
+- Filters out read-only states and config values to reduce false positives
+- Only inspects states from active (enabled) adapters
 
 #### Other Health Checks (Coming Soon)
 - ioBroker instance health overview
@@ -339,6 +341,92 @@ The inspector provides cleanup suggestions based on orphan category:
 - **Keep for now:** States matching ignore patterns
 
 **Important:** The adapter never deletes states automatically. Use the report to make informed cleanup decisions in the ioBroker admin UI.
+
+### Stale State Inspector
+
+The State Inspector identifies **writable states** that haven't been updated for a configured time threshold, helping you find states that may no longer be actively maintained or updated.
+
+**Key Features:**
+- Scans all states in your ioBroker system for staleness
+- **Filters out read-only states** (`common.write === false`) to reduce false positives
+- **Filters out states from inactive adapters** (disabled or removed) to focus on relevant states
+- Configurable time threshold (default: 24 hours)
+- Ignores system states (`system.*`, `admin.*`, etc.) and custom ignore patterns
+
+#### Outdated State Detection Criteria
+
+A state is considered **outdated/stale** when **all** of the following conditions are met:
+
+1. **Writable:** The state has `common.write === true` (can be written to)
+2. **Not Read-Only:** The state is NOT read-only (`common.read === true && common.write === false`)
+3. **Active Adapter:** The state belongs to an **enabled** adapter (adapter instance with `common.enabled === true`)
+4. **Old Timestamp:** The state hasn't been updated for longer than the configured threshold (default: 24 hours)
+5. **Not Ignored:** The state doesn't match any ignore patterns
+
+**Why these criteria?**
+
+- **Read-only states** (e.g., config values, metadata) are **expected** to remain unchanged
+- **States from disabled adapters** are **expected** to be stale (adapter isn't running)
+- **Writable states** from active adapters should be updated regularly
+
+This approach significantly reduces false positives compared to a simple "time since last update" check.
+
+#### States Created
+
+- `system-health.0.inspector.staleStates.report` — Full JSON report with all stale states
+- `system-health.0.inspector.staleStates.count` — Total number of stale states
+- `system-health.0.inspector.staleStates.hasStale` — Boolean indicator
+- `system-health.0.inspector.staleStates.byAdapter` — Breakdown by adapter (JSON)
+- `system-health.0.inspector.staleStates.lastScan` — Timestamp of last scan
+
+#### Configuration
+
+Configure the stale threshold and ignore patterns:
+
+```json
+{
+  "enableStaleDetection": true,
+  "staleThresholdHours": 24,
+  "stateInspectorIgnorePatterns": [
+    "system.*",
+    "admin.*",
+    "*.info.*"
+  ]
+}
+```
+
+**Parameters:**
+- `enableStaleDetection` — Enable/disable stale state inspection (default: true)
+- `staleThresholdHours` — Hours after which a state is considered stale (default: 24)
+- `stateInspectorIgnorePatterns` — Array of wildcard patterns to ignore (e.g., `system.*`, `mydevice.*`)
+
+#### Report Structure
+
+```json
+{
+  "timestamp": "2026-02-25T12:00:00.000Z",
+  "thresholdHours": 24,
+  "totalStale": 15,
+  "truncated": false,
+  "staleStates": [
+    {
+      "id": "mqtt.0.device.temperature",
+      "adapter": "mqtt.0",
+      "lastUpdate": "2026-02-24T10:30:00.000Z",
+      "ageHours": 25
+    }
+  ],
+  "summary": {
+    "byAdapter": {
+      "mqtt.0": 8,
+      "zigbee.0": 5,
+      "modbus.0": 2
+    }
+  }
+}
+```
+
+**Important:** This inspector is **report-only** and does not delete states automatically. Use the report to investigate and clean up stale states manually.
 
 ### Duplicate State Detection
 
