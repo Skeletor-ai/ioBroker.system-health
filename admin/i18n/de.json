@@ -50,5 +50,8 @@
     "safeToDelete": "Sicher zu löschen",
     "reviewRequired": "Überprüfung erforderlich",
     "noDataAvailable": "Keine Daten verfügbar. Bitte zuerst einen Health-Check ausführen.",
-    "noIssuesFound": "Keine Probleme gefunden."
+    "noIssuesFound": "Keine Probleme gefunden.",
+    "filterByCategory": "Nach Kategorie filtern",
+    "filterByAdapter": "Nach Adapter filtern",
+    "all": "Alle"
 }
