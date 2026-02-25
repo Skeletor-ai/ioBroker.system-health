@@ -158,6 +158,42 @@
             "sm": 6,
             "hidden": "!data.enableStaleDetection"
         },
+        "enablePerformanceAnalysis": {
+            "type": "checkbox",
+            "label": "Enable performance analysis",
+            "default": true,
+            "sm": 6
+        },
+        "performanceFrequencyThresholdMs": {
+            "type": "number",
+            "label": "High-frequency threshold (ms)",
+            "help": "Flag states updated faster than this interval",
+            "min": 10,
+            "max": 10000,
+            "default": 100,
+            "sm": 6,
+            "hidden": "!data.enablePerformanceAnalysis"
+        },
+        "performanceLargeTreeThreshold": {
+            "type": "number",
+            "label": "Large object tree threshold",
+            "help": "Flag adapters with more states than this count",
+            "min": 100,
+            "max": 50000,
+            "default": 1000,
+            "sm": 6,
+            "hidden": "!data.enablePerformanceAnalysis"
+        },
+        "performanceMonitoringDurationMs": {
+            "type": "number",
+            "label": "Monitoring duration (ms)",
+            "help": "How long to monitor state changes for frequency analysis",
+            "min": 10000,
+            "max": 300000,
+            "default": 60000,
+            "sm": 6,
+            "hidden": "!data.enablePerformanceAnalysis"
+        },
         "stateInspectorIgnorePatterns": {
             "newLine": true,
             "type": "chips",

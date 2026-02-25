@@ -9,6 +9,7 @@ const LogMonitor = require('./lib/health-checks/log-monitor');
 const DuplicateStateInspector = require('./lib/state-inspector/duplicate-detection');
 const OrphanedStateInspector = require('./lib/state-inspector/orphaned-states');
 const StaleStateInspector = require('./lib/state-inspector/stale-detection');
+const PerformanceAnalysisInspector = require('./lib/state-inspector/performance-analysis');
 
 class Health extends utils.Adapter {
     /**
@@ -41,6 +42,9 @@ class Health extends utils.Adapter {
         
         /** @type {StaleStateInspector|null} */
         this.staleInspector = null;
+        
+        /** @type {PerformanceAnalysisInspector|null} */
+        this.performanceInspector = null;
         
         /** @type {NodeJS.Timeout|null} */
         this.healthCheckInterval = null;
@@ -473,8 +477,12 @@ class Health extends utils.Adapter {
             await this.runStaleDetection();
         }
 
+        if (config.enablePerformanceAnalysis) {
+            await this.runPerformanceAnalysis();
+        }
+
         // Update summary states only if at least one inspector ran
-        if (this.duplicateInspector || this.orphanedInspector || this.staleInspector) {
+        if (this.duplicateInspector || this.orphanedInspector || this.staleInspector || this.performanceInspector) {
             await this.updateStateInspectorSummary();
         }
 
@@ -657,6 +665,42 @@ class Health extends utils.Adapter {
             this.log.warn(`Found ${report.totalStale} stale state(s)`);
         } else {
             this.log.info('No stale states detected');
+        }
+    }
+
+    /**
+     * Run performance analysis inspection.
+     */
+    async runPerformanceAnalysis() {
+        if (!this.performanceInspector) {
+            const config = {
+                updateFrequencyThresholdMs: this.config.performanceFrequencyThresholdMs || 100,
+                largeTreeThreshold: this.config.performanceLargeTreeThreshold || 1000,
+                monitoringDurationMs: this.config.performanceMonitoringDurationMs || 60000,
+                ignorePatterns: this._parseIgnorePatterns(this.config.stateInspectorIgnorePatterns)
+            };
+            this.performanceInspector = new PerformanceAnalysisInspector(this, config);
+            await this.performanceInspector.init();
+        }
+
+        const report = await this.performanceInspector.inspect();
+
+        const totalIssues = 
+            report.highFrequencyStates.length +
+            report.largeObjectTrees.length +
+            report.historyWaste.length +
+            report.ackIssues.length;
+
+        if (totalIssues > 0) {
+            this.log.warn(
+                `Performance analysis found ${totalIssues} issue(s): ` +
+                `${report.highFrequencyStates.length} high-freq, ` +
+                `${report.largeObjectTrees.length} large trees, ` +
+                `${report.historyWaste.length} history waste, ` +
+                `${report.ackIssues.length} ack issues`
+            );
+        } else {
+            this.log.info('No performance issues detected');
         }
     }
 
