@@ -8,6 +8,7 @@ const CrashDetection = require('./lib/health-checks/crash-detection');
 const DuplicateStateInspector = require('./lib/state-inspector/duplicate-detection');
 const OrphanedStateInspector = require('./lib/state-inspector/orphaned-states');
 const StaleStateInspector = require('./lib/state-inspector/stale-detection');
+const PerformanceAnalyzer = require('./lib/state-inspector/performance-analyzer');
 
 class Health extends utils.Adapter {
     /**
@@ -37,6 +38,9 @@ class Health extends utils.Adapter {
         
         /** @type {StaleStateInspector|null} */
         this.staleInspector = null;
+        
+        /** @type {PerformanceAnalyzer|null} */
+        this.performanceAnalyzer = null;
         
         /** @type {NodeJS.Timeout|null} */
         this.healthCheckInterval = null;
@@ -387,8 +391,12 @@ class Health extends utils.Adapter {
             await this.runStaleDetection();
         }
 
+        if (config.enablePerformanceAnalysis) {
+            await this.runPerformanceAnalysis();
+        }
+
         // Update summary states only if at least one inspector ran
-        if (this.duplicateInspector || this.orphanedInspector || this.staleInspector) {
+        if (this.duplicateInspector || this.orphanedInspector || this.staleInspector || this.performanceAnalyzer) {
             await this.updateStateInspectorSummary();
         }
 
@@ -536,6 +544,27 @@ class Health extends utils.Adapter {
             this.log.warn(`Found ${report.totalStale} stale state(s)`);
         } else {
             this.log.info('No stale states detected');
+        }
+    }
+
+    /**
+     * Run performance analysis.
+     */
+    async runPerformanceAnalysis() {
+        if (!this.performanceAnalyzer) {
+            const updateFrequencyMs = this.config.performanceUpdateFrequencyMs || 100;
+            const ignorePatterns = this._parseIgnorePatterns(this.config.stateInspectorIgnorePatterns);
+            this.performanceAnalyzer = new PerformanceAnalyzer(this, updateFrequencyMs, ignorePatterns);
+            await this.performanceAnalyzer.init();
+        }
+
+        const report = await this.performanceAnalyzer.analyse();
+
+        const totalIssues = report.summary.totalIssuesFound;
+        if (totalIssues > 0) {
+            this.log.info(`Found ${totalIssues} performance issue(s): ${report.summary.frequentUpdateCount} frequent updates, ${report.summary.unnecessaryHistoryCount} unnecessary history, ${report.summary.largeObjectTreeCount} large trees, ${report.summary.ackIssueCount} ack issues`);
+        } else {
+            this.log.info('No performance issues detected');
         }
     }
 
@@ -956,6 +985,9 @@ class Health extends utils.Adapter {
             }
             if (this.staleInspector) {
                 await this.staleInspector.cleanup();
+            }
+            if (this.performanceAnalyzer) {
+                await this.performanceAnalyzer.cleanup();
             }
             this.log.info('ioBroker.system-health stopped.');
             callback();
