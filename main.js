@@ -1122,6 +1122,9 @@ class Health extends utils.Adapter {
             if (this.staleInspector) {
                 await this.staleInspector.cleanup();
             }
+            if (this.performanceInspector) {
+                await this.performanceInspector.cleanup();
+            }
             this.log.info('ioBroker.system-health stopped.');
             callback();
         } catch {
