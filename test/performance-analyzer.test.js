@@ -1,6 +1,6 @@
 'use strict';
 
-const { describe, it } = require('node:test');
+const { describe, it, beforeEach } = require('node:test');
 const assert = require('node:assert');
 const PerformanceAnalyzer = require('../lib/state-inspector/performance-analyzer');
 
@@ -61,14 +61,13 @@ describe('PerformanceAnalyzer', () => {
     let analyzer;
     let adapter;
 
-    const beforeEach = async () => {
+    beforeEach(async () => {
         adapter = new MockAdapter();
         analyzer = new PerformanceAnalyzer(adapter, 100, []);
-    };
+    });
 
     describe('initialization', () => {
         it('should initialize without errors', async () => {
-            await beforeEach();
             await analyzer.init();
             
             // Check that states were created
@@ -79,7 +78,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('frequent updates detection', () => {
         it('should detect states with frequent updates', async () => {
-            await beforeEach();
             // Mock states with quick updates
             adapter.states['device.0.sensor.temperature'] = {
                 val: 25.5,
@@ -108,7 +106,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('unnecessary history detection', () => {
         it('should detect unnecessary history on binary states', async () => {
-            await beforeEach();
             // Mock a boolean state with history enabled
             adapter.states['device.0.switch.lock'] = {
                 val: true,
@@ -134,7 +131,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('large object trees detection', () => {
         it('should detect large object trees', async () => {
-            await beforeEach();
             // Create many child states under one parent
             const parentId = 'device.0.channels';
             for (let i = 0; i < 150; i++) {
@@ -159,7 +155,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('ack issues detection', () => {
         it('should detect ack issues', async () => {
-            await beforeEach();
             // Mock a state that requires ack but didn't receive it
             adapter.states['device.0.switch.power'] = {
                 val: true,
@@ -184,7 +179,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('report generation', () => {
         it('should generate a complete report', async () => {
-            await beforeEach();
             // Add various test states
             adapter.states['test.0.state1'] = { val: 'test', ts: Date.now(), ack: true };
             adapter.states['test.0.state2'] = { val: 42, ts: Date.now(), ack: true };
@@ -213,7 +207,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('ignore patterns', () => {
         it('should ignore system and admin states', async () => {
-            await beforeEach();
             adapter.states['system.adapter.admin.alive'] = { val: true, ts: Date.now(), ack: true };
             adapter.states['admin.0.whatever'] = { val: 'test', ts: Date.now(), ack: true };
             adapter.states['vis.0.page'] = { val: 'main', ts: Date.now(), ack: true };
@@ -232,7 +225,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('state updates', () => {
         it('should update states with analysis results', async () => {
-            await beforeEach();
             adapter.states['device.0.test'] = { val: 1, ts: Date.now(), ack: true };
 
             await analyzer.init();
@@ -248,7 +240,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('cleanup', () => {
         it('should cleanup properly', async () => {
-            await beforeEach();
             await analyzer.init();
             await analyzer.cleanup();
 
@@ -260,7 +251,6 @@ describe('PerformanceAnalyzer', () => {
 
     describe('utility methods', () => {
         it('should extract adapter name correctly', async () => {
-            await beforeEach();
             assert.strictEqual(analyzer.extractAdapterName('device.0.sensor.temp'), 'device.0');
             assert.strictEqual(analyzer.extractAdapterName('mqtt.0.topic'), 'mqtt.0');
             assert.strictEqual(analyzer.extractAdapterName('zigbee.1.light'), 'zigbee.1');
@@ -268,7 +258,6 @@ describe('PerformanceAnalyzer', () => {
         });
 
         it('should respect ignore patterns', async () => {
-            await beforeEach();
             const customAnalyzer = new PerformanceAnalyzer(adapter, 100, ['custom.*']);
 
             assert(customAnalyzer.shouldIgnore('system.adapter.admin.alive'));
