@@ -136,6 +136,12 @@ class Health extends utils.Adapter {
                 if (obj.callback) {
                     this.sendTo(obj.from, obj.command, html, obj.callback);
                 }
+            } else if (command === 'getLogDetails') {
+                const lang = (obj.message && obj.message.lang) || 'en';
+                const html = await this.renderLogDetailsHtml(lang);
+                if (obj.callback) {
+                    this.sendTo(obj.from, obj.command, html, obj.callback);
+                }
             }
         }
     }
@@ -1105,6 +1111,83 @@ window.filterTable_${type} = function(btn, filterValue) {
         html += `<div style="padding:12px;background:rgba(255,193,7,0.1);border-left:3px solid #ff9800;margin-top:16px;font-size:12px;">`;
         html += `<strong>⚠️ ${this.t('warning', lang)}:</strong> ${this.t('cleanupWarning', lang)}`;
         html += `</div>`;
+
+        html += '</div>';
+        return html;
+    }
+
+    /**
+     * Render HTML table for log monitoring details.
+     * @param {string} [lang] - Language code
+     * @returns {Promise<string>} HTML string
+     */
+    async renderLogDetailsHtml(lang = 'en') {
+        // Read log details from state
+        const detailsState = await this.getStateAsync('logs.details');
+        
+        if (!detailsState || !detailsState.val) {
+            return `<div style="padding:8px;opacity:0.6;">${this.t('noDataAvailable', lang)}</div>`;
+        }
+
+        let instances;
+        try {
+            instances = JSON.parse(detailsState.val);
+        } catch (e) {
+            return `<div style="padding:8px;opacity:0.6;color:red;">Error parsing log details</div>`;
+        }
+
+        if (!Array.isArray(instances) || instances.length === 0) {
+            return `<div style="padding:8px;opacity:0.6;">${this.t('noIssuesFound', lang)}</div>`;
+        }
+
+        let html = '<div style="font-size:13px;">';
+
+        // Summary section
+        const totalErrors = instances.reduce((sum, i) => sum + i.totalErrors, 0);
+        const totalWarnings = instances.reduce((sum, i) => sum + i.totalWarnings, 0);
+        
+        html += '<div style="margin-bottom:16px;padding:12px;background:rgba(128,128,128,0.05);border-radius:4px;">';
+        html += `<div style="font-weight:bold;margin-bottom:8px;">${this.t('summary', lang) || 'Summary'}:</div>`;
+        html += `<div style="display:flex;gap:20px;">`;
+        html += `<div><span style="color:#f44336;font-weight:bold;">${totalErrors}</span> ${this.t('errors', lang) || 'Errors'}</div>`;
+        html += `<div><span style="color:#ff9800;font-weight:bold;">${totalWarnings}</span> ${this.t('warnings', lang) || 'Warnings'}</div>`;
+        html += `<div><span style="font-weight:bold;">${instances.length}</span> ${this.t('instances', lang) || 'Instances'}</div>`;
+        html += `</div></div>`;
+
+        // Per-instance breakdown
+        for (const instance of instances) {
+            const hasErrors = instance.totalErrors > 0;
+            const hasWarnings = instance.totalWarnings > 0;
+            
+            if (!hasErrors && !hasWarnings) continue;
+
+            const statusColor = hasErrors ? '#f44336' : '#ff9800';
+            
+            html += `<div style="margin-bottom:20px;padding:12px;border-left:3px solid ${statusColor};background:rgba(128,128,128,0.02);">`;
+            html += `<div style="font-weight:bold;margin-bottom:8px;color:${statusColor};">${this.escapeHtml(instance.instance)}</div>`;
+            
+            if (hasErrors && instance.topErrors.length > 0) {
+                html += `<div style="margin-bottom:8px;">`;
+                html += `<span style="color:#f44336;font-weight:bold;">${this.t('errors', lang) || 'Errors'}</span> (${instance.totalErrors}):`;
+                html += '<ul style="margin:4px 0;padding-left:20px;font-size:12px;">';
+                for (const err of instance.topErrors) {
+                    html += `<li>${this.escapeHtml(err.type)}: ${err.count}×</li>`;
+                }
+                html += '</ul></div>';
+            }
+            
+            if (hasWarnings && instance.topWarnings.length > 0) {
+                html += `<div>`;
+                html += `<span style="color:#ff9800;font-weight:bold;">${this.t('warnings', lang) || 'Warnings'}</span> (${instance.totalWarnings}):`;
+                html += '<ul style="margin:4px 0;padding-left:20px;font-size:12px;">';
+                for (const warn of instance.topWarnings) {
+                    html += `<li>${this.escapeHtml(warn.type)}: ${warn.count}×</li>`;
+                }
+                html += '</ul></div>';
+            }
+            
+            html += '</div>';
+        }
 
         html += '</div>';
         return html;
