@@ -10,6 +10,7 @@ const DuplicateStateInspector = require('./lib/state-inspector/duplicate-detecti
 const OrphanedStateInspector = require('./lib/state-inspector/orphaned-states');
 const StaleStateInspector = require('./lib/state-inspector/stale-detection');
 const PerformanceAnalysisInspector = require('./lib/state-inspector/performance-analysis');
+const RedisMonitor = require('./lib/health-checks/redis-monitor');
 
 class Health extends utils.Adapter {
     /**
@@ -45,6 +46,9 @@ class Health extends utils.Adapter {
         
         /** @type {PerformanceAnalysisInspector|null} */
         this.performanceInspector = null;
+        
+        /** @type {RedisMonitor|null} */
+        this.redisMonitor = null;
         
         /** @type {NodeJS.Timeout|null} */
         this.healthCheckInterval = null;
@@ -325,6 +329,54 @@ class Health extends utils.Adapter {
             native: {},
         });
 
+        // Redis monitoring states
+        await this.setObjectNotExistsAsync('redis.status', {
+            type: 'state',
+            common: { name: 'Redis status', type: 'string', role: 'text', read: true, write: false,
+                states: { ok: 'OK', warning: 'Warning', error: 'Error', skipped: 'Skipped' } },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.connected', {
+            type: 'state',
+            common: { name: 'Redis connected', type: 'boolean', role: 'indicator.reachable', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.memoryUsedPercent', {
+            type: 'state',
+            common: { name: 'Redis memory usage (%)', type: 'number', role: 'value', unit: '%', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.memoryUsedBytes', {
+            type: 'state',
+            common: { name: 'Redis memory used (bytes)', type: 'number', role: 'value', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.keys', {
+            type: 'state',
+            common: { name: 'Redis total keys', type: 'number', role: 'value', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.evictedKeys', {
+            type: 'state',
+            common: { name: 'Redis evicted keys', type: 'number', role: 'value', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.latencyMs', {
+            type: 'state',
+            common: { name: 'Redis ping latency (ms)', type: 'number', role: 'value', unit: 'ms', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.details', {
+            type: 'state',
+            common: { name: 'Redis detailed report (JSON)', type: 'string', role: 'json', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.timestamp', {
+            type: 'state',
+            common: { name: 'Last Redis check timestamp', type: 'number', role: 'date', read: true, write: false },
+            native: {},
+        });
+
         // State Inspector summary states
         await this.setObjectNotExistsAsync('stateInspector.totalIssues', {
             type: 'state',
@@ -493,6 +545,11 @@ class Health extends utils.Adapter {
             await this.runLogCheck();
         }
 
+        // Redis monitoring
+        if (config.enableRedisMonitoring !== false) {
+            await this.runRedisCheck();
+        }
+
         // State inspector checks
         if (config.enableDuplicateDetection) {
             await this.runDuplicateDetection();
@@ -636,6 +693,62 @@ class Health extends utils.Adapter {
         }
 
         this.log.info('Log check completed.');
+    }
+
+    /**
+     * Run Redis health check.
+     */
+    async runRedisCheck() {
+        if (!this.redisMonitor) {
+            this.redisMonitor = new RedisMonitor(this, {
+                memoryWarningPercent: this.config.redisMemoryWarningPercent || 80,
+                memoryErrorPercent: this.config.redisMemoryErrorPercent || 95,
+                latencyWarningMs: this.config.redisLatencyWarningMs || 100,
+            });
+        }
+
+        const result = await this.redisMonitor.check();
+
+        if (result.status === 'skipped') {
+            this.log.debug('Redis monitoring skipped: ' + result.reason);
+            return;
+        }
+
+        // Update states
+        await this.setStateAsync('redis.status', result.status, true);
+        await this.setStateAsync('redis.connected', result.connection, true);
+        await this.setStateAsync('redis.latencyMs', result.latencyMs || 0, true);
+        await this.setStateAsync('redis.timestamp', result.timestamp, true);
+
+        if (result.memory) {
+            await this.setStateAsync('redis.memoryUsedPercent', result.memory.usedPercent, true);
+            await this.setStateAsync('redis.memoryUsedBytes', result.memory.usedBytes, true);
+        }
+
+        if (result.keys !== null) {
+            await this.setStateAsync('redis.keys', result.keys, true);
+        }
+
+        if (result.evictedKeys !== null) {
+            await this.setStateAsync('redis.evictedKeys', result.evictedKeys, true);
+        }
+
+        await this.setStateAsync('redis.details', JSON.stringify(result, null, 2), true);
+
+        // Log results
+        if (result.errors.length > 0) {
+            for (const err of result.errors) {
+                this.log.error(`Redis: ${err}`);
+            }
+        }
+        if (result.warnings.length > 0) {
+            for (const warn of result.warnings) {
+                this.log.warn(`Redis: ${warn}`);
+            }
+        }
+        if (result.status === 'ok') {
+            this.log.info(`Redis check: OK (latency: ${result.latencyMs}ms, keys: ${result.keys})`);
+        }
     }
 
     /**
