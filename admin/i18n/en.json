@@ -53,5 +53,15 @@
     "noIssuesFound": "No issues found.",
     "filterByCategory": "Filter by category",
     "filterByAdapter": "Filter by adapter",
-    "all": "All"
+    "all": "All",
+    "Performance Analysis": "Performance Analysis",
+    "Enable performance analysis": "Enable performance analysis",
+    "Monitor state update frequency and resource usage patterns": "Monitor state update frequency and resource usage patterns",
+    "Update frequency threshold (ms)": "Update frequency threshold (ms)",
+    "States updating faster than this interval are flagged as frequently updated": "States updating faster than this interval are flagged as frequently updated",
+    "performanceAnalysis": "Performance Analysis",
+    "frequentlyUpdatedStates": "Frequently Updated States",
+    "unnecessaryHistoryStates": "Unnecessary History States",
+    "largeStateObjects": "Large State Objects",
+    "stateAckIssues": "State ACK Issues"
 }

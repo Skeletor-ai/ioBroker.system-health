@@ -134,6 +134,29 @@
             "delimiter": ",",
             "sm": 12,
             "default": []
+        },
+
+        "_performanceHeader": {
+            "type": "header",
+            "text": "Performance Analysis",
+            "size": 3
+        },
+        "enablePerformanceAnalysis": {
+            "type": "checkbox",
+            "label": "Enable performance analysis",
+            "help": "Monitor state update frequency and resource usage patterns",
+            "default": false,
+            "sm": 6
+        },
+        "performanceUpdateFrequencyMs": {
+            "type": "number",
+            "label": "Update frequency threshold (ms)",
+            "help": "States updating faster than this interval are flagged as frequently updated",
+            "min": 10,
+            "max": 10000,
+            "default": 100,
+            "sm": 6,
+            "hidden": "!data.enablePerformanceAnalysis"
         }
     }
 }

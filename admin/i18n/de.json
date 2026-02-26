@@ -53,5 +53,15 @@
     "noIssuesFound": "Keine Probleme gefunden.",
     "filterByCategory": "Nach Kategorie filtern",
     "filterByAdapter": "Nach Adapter filtern",
-    "all": "Alle"
+    "all": "Alle",
+    "Performance Analysis": "Leistungsanalyse",
+    "Enable performance analysis": "Leistungsanalyse aktivieren",
+    "Monitor state update frequency and resource usage patterns": "Überwache Datenpunkt-Update-Häufigkeit und Ressourcennutzungsmuster",
+    "Update frequency threshold (ms)": "Update-Häufigkeitsschwelle (ms)",
+    "States updating faster than this interval are flagged as frequently updated": "Datenpunkte die schneller als dieses Intervall aktualisiert werden, werden als häufig aktualisiert gekennzeichnet",
+    "performanceAnalysis": "Leistungsanalyse",
+    "frequentlyUpdatedStates": "Häufig aktualisierte Datenpunkte",
+    "unnecessaryHistoryStates": "Unnötige Datenpunkte mit Historie",
+    "largeStateObjects": "Große Datenpunktobjekte",
+    "stateAckIssues": "Datenpunkt-ACK-Probleme"
 }
