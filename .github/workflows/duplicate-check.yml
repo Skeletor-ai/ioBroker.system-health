@@ -1,0 +1,69 @@
+name: Duplicate Issue Check
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  check-duplicate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const newIssue = context.payload.issue;
+            const newTitle = newIssue.title.toLowerCase();
+            const newBody = (newIssue.body || '').toLowerCase();
+
+            // Get open issues (excluding the new one)
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+
+            const candidates = [];
+            for (const issue of issues) {
+              if (issue.number === newIssue.number) continue;
+              if (issue.pull_request) continue;
+
+              const existingTitle = issue.title.toLowerCase();
+
+              // Simple word overlap similarity
+              const newWords = new Set(newTitle.split(/\s+/).filter(w => w.length > 3));
+              const existingWords = new Set(existingTitle.split(/\s+/).filter(w => w.length > 3));
+              const overlap = [...newWords].filter(w => existingWords.has(w));
+              const similarity = newWords.size > 0
+                ? overlap.length / Math.max(newWords.size, existingWords.size)
+                : 0;
+
+              if (similarity >= 0.5) {
+                candidates.push({ number: issue.number, title: issue.title, similarity });
+              }
+            }
+
+            if (candidates.length > 0) {
+              const list = candidates
+                .sort((a, b) => b.similarity - a.similarity)
+                .slice(0, 3)
+                .map(c => `- #${c.number}: ${c.title} (${Math.round(c.similarity * 100)}% match)`)
+                .join('\n');
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: newIssue.number,
+                body: `⚠️ **Possible duplicate detected:**\n\n${list}\n\nPlease check if this is already tracked. If it's not a duplicate, a maintainer will add the \`ready\` label.`,
+              });
+
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: newIssue.number,
+                labels: ['needs-triage'],
+              });
+            }

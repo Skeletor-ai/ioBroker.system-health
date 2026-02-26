@@ -1,0 +1,89 @@
+name: Update Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const pr = context.payload.pull_request;
+            const title = pr.title;
+            const number = pr.number;
+            const date = new Date().toISOString().split('T')[0];
+
+            // Categorize based on PR title prefix
+            let category = 'Changed';
+            const titleLower = title.toLowerCase();
+            if (titleLower.startsWith('fix')) category = 'Fixed';
+            else if (titleLower.startsWith('feat') || titleLower.includes('add')) category = 'Added';
+            else if (titleLower.startsWith('chore') || titleLower.startsWith('refactor')) category = 'Changed';
+            else if (titleLower.includes('remove') || titleLower.includes('deprecat')) category = 'Removed';
+
+            const entry = `- ${title} (#${number})`;
+
+            // Read existing changelog
+            let changelog = '';
+            try {
+              changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+            } catch {
+              changelog = '# Changelog\n\n';
+            }
+
+            // Check if there's already an Unreleased section
+            const unreleasedHeader = '## [Unreleased]';
+            if (changelog.includes(unreleasedHeader)) {
+              // Find the category section or add it
+              const categoryHeader = `### ${category}`;
+              const unreleasedIdx = changelog.indexOf(unreleasedHeader);
+              const nextSectionIdx = changelog.indexOf('\n## ', unreleasedIdx + 1);
+              const unreleasedSection = nextSectionIdx > 0
+                ? changelog.substring(unreleasedIdx, nextSectionIdx)
+                : changelog.substring(unreleasedIdx);
+
+              if (unreleasedSection.includes(categoryHeader)) {
+                // Add entry after category header
+                changelog = changelog.replace(
+                  categoryHeader,
+                  `${categoryHeader}\n${entry}`
+                );
+              } else {
+                // Add new category section
+                changelog = changelog.replace(
+                  unreleasedHeader,
+                  `${unreleasedHeader}\n\n${categoryHeader}\n${entry}`
+                );
+              }
+            } else {
+              // Add Unreleased section at the top
+              changelog = changelog.replace(
+                '# Changelog\n',
+                `# Changelog\n\n${unreleasedHeader}\n\n### ${category}\n${entry}\n`
+              );
+            }
+
+            fs.writeFileSync('CHANGELOG.md', changelog);
+            console.log(`Added to changelog: [${category}] ${entry}`);
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git diff --cached --quiet || git commit -m "docs: update changelog for PR #${{ github.event.pull_request.number }} [skip ci]"
+          git push
