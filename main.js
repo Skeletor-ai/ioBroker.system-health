@@ -828,14 +828,15 @@ class Health extends utils.Adapter {
         // Collect unique categories
         const categories = [...new Set(states.map(s => s.category))].sort();
 
-        // Build category filter buttons with data-filter attributes
+        // Build category filter buttons with onclick handlers
         let html = '<div style="margin-bottom:12px;padding:8px;background:rgba(128,128,128,0.05);border-radius:4px;">';
         html += `<span style="margin-right:8px;opacity:0.7;font-weight:bold;">${this.t('filterByCategory', lang) || 'Filter by category'}:</span>`;
-        html += `<button data-filter="" class="filter-orphaned-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.t('all', lang) || 'All'} (${total})</button>`;
+        html += `<button onclick="filterTable_orphaned(this, '')" class="filter-orphaned-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#1976d2;color:#fff;font-weight:bold;cursor:pointer;font-size:12px;">${this.t('all', lang) || 'All'} (${total})</button>`;
         
         for (const cat of categories) {
             const count = states.filter(s => s.category === cat).length;
-            html += `<button data-filter="${this.escapeHtml(cat)}" class="filter-orphaned-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.escapeHtml(cat)} (${count})</button>`;
+            const escapedCat = this.escapeHtml(cat).replace(/'/g, "\\'");
+            html += `<button onclick="filterTable_orphaned(this, '${escapedCat}')" class="filter-orphaned-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.escapeHtml(cat)} (${count})</button>`;
         }
         html += '</div>';
 
@@ -882,14 +883,15 @@ class Health extends utils.Adapter {
         // Collect unique adapters
         const adapters = [...new Set(states.map(s => s.adapter))].sort();
 
-        // Build adapter filter buttons with data-filter attributes
+        // Build adapter filter buttons with onclick handlers
         let html = '<div style="margin-bottom:12px;padding:8px;background:rgba(128,128,128,0.05);border-radius:4px;">';
         html += `<span style="margin-right:8px;opacity:0.7;font-weight:bold;">${this.t('filterByAdapter', lang) || 'Filter by adapter'}:</span>`;
-        html += `<button data-filter="" class="filter-stale-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.t('all', lang) || 'All'} (${total})</button>`;
+        html += `<button onclick="filterTable_stale(this, '')" class="filter-stale-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#1976d2;color:#fff;font-weight:bold;cursor:pointer;font-size:12px;">${this.t('all', lang) || 'All'} (${total})</button>`;
         
         for (const adapter of adapters) {
             const count = states.filter(s => s.adapter === adapter).length;
-            html += `<button data-filter="${this.escapeHtml(adapter)}" class="filter-stale-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.escapeHtml(adapter)} (${count})</button>`;
+            const escapedAdapter = this.escapeHtml(adapter).replace(/'/g, "\\'");
+            html += `<button onclick="filterTable_stale(this, '${escapedAdapter}')" class="filter-stale-btn" style="margin:2px 4px;padding:4px 12px;border:1px solid rgba(128,128,128,0.3);border-radius:3px;background:#fff;cursor:pointer;font-size:12px;">${this.escapeHtml(adapter)} (${count})</button>`;
         }
         html += '</div>';
 
@@ -927,44 +929,35 @@ class Health extends utils.Adapter {
         const rowClass = type === 'orphaned' ? 'orphaned-row' : 'stale-row';
         const dataAttr = type === 'orphaned' ? 'category' : 'adapter';
         const btnClass = type === 'orphaned' ? 'filter-orphaned-btn' : 'filter-stale-btn';
+        const tableId = type === 'orphaned' ? 'orphanedTable' : 'staleTable';
         
         return `
 <script>
-(function() {
-    const buttons = document.querySelectorAll('.${btnClass}');
-    buttons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const filterValue = this.getAttribute('data-filter');
-            const rows = document.querySelectorAll('.${rowClass}');
-            
-            rows.forEach(row => {
-                const rowValue = row.getAttribute('data-${dataAttr}');
-                if (filterValue === '' || rowValue === filterValue) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            
-            // Update button styles
-            buttons.forEach(b => {
-                if (b === this) {
-                    b.style.background = '#1976d2';
-                    b.style.color = '#fff';
-                    b.style.fontWeight = 'bold';
-                } else {
-                    b.style.background = '#fff';
-                    b.style.color = '#000';
-                    b.style.fontWeight = 'normal';
-                }
-            });
-        });
+window.filterTable_${type} = function(btn, filterValue) {
+    const rows = document.querySelectorAll('.${rowClass}');
+    rows.forEach(row => {
+        const rowValue = row.getAttribute('data-${dataAttr}');
+        if (filterValue === '' || rowValue === filterValue) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
     });
     
-    // Trigger "All" filter on load
-    const allBtn = document.querySelector('.${btnClass}[data-filter=""]');
-    if (allBtn) allBtn.click();
-})();
+    // Update button styles
+    const buttons = document.querySelectorAll('.${btnClass}');
+    buttons.forEach(b => {
+        if (b === btn) {
+            b.style.background = '#1976d2';
+            b.style.color = '#fff';
+            b.style.fontWeight = 'bold';
+        } else {
+            b.style.background = '#fff';
+            b.style.color = '#000';
+            b.style.fontWeight = 'normal';
+        }
+    });
+};
 </script>`;
     }
 
