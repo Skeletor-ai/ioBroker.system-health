@@ -65,7 +65,11 @@
         "enableStaleDetection": true,
         "enableAdapterCrashDetection": true,
         "enableMemoryMonitoring": true,
-        "enableDiskMonitoring": true
+        "enableDiskMonitoring": true,
+        "enableRedisMonitoring": true,
+        "redisMemoryWarningPercent": 80,
+        "redisMemoryErrorPercent": 95,
+        "redisLatencyWarningMs": 100
     },
     "objects": [],
     "instanceObjects": []

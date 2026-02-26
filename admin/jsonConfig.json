@@ -114,6 +114,48 @@
             "hidden": "!data.enableLogMonitoring"
         },
 
+        "_redisHeader": {
+            "type": "header",
+            "text": "Redis Monitoring",
+            "size": 3
+        },
+        "enableRedisMonitoring": {
+            "type": "checkbox",
+            "label": "Enable Redis health monitoring",
+            "default": true,
+            "sm": 6
+        },
+        "redisMemoryWarningPercent": {
+            "type": "number",
+            "label": "Redis memory warning threshold (%)",
+            "help": "Warn when Redis memory exceeds this percentage of maxmemory",
+            "min": 50,
+            "max": 99,
+            "default": 80,
+            "sm": 6,
+            "hidden": "!data.enableRedisMonitoring"
+        },
+        "redisMemoryErrorPercent": {
+            "type": "number",
+            "label": "Redis memory error threshold (%)",
+            "help": "Error when Redis memory exceeds this percentage of maxmemory",
+            "min": 50,
+            "max": 100,
+            "default": 95,
+            "sm": 6,
+            "hidden": "!data.enableRedisMonitoring"
+        },
+        "redisLatencyWarningMs": {
+            "type": "number",
+            "label": "Redis latency warning threshold (ms)",
+            "help": "Warn when Redis ping latency exceeds this value",
+            "min": 10,
+            "max": 5000,
+            "default": 100,
+            "sm": 6,
+            "hidden": "!data.enableRedisMonitoring"
+        },
+
         "_stateHeader": {
             "type": "header",
             "text": "State Inspector",
