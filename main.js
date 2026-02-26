@@ -436,6 +436,25 @@ class Health extends utils.Adapter {
             },
             native: {},
         });
+
+        // Initialize inspector summary values to avoid null values in admin UI
+        // before the first complete scan has finished.
+        await this.setStateAsync('stateInspector.totalIssues', 0, true);
+        await this.setStateAsync('stateInspector.orphaned', 0, true);
+        await this.setStateAsync('stateInspector.stale', 0, true);
+        await this.setStateAsync('stateInspector.duplicates', 0, true);
+        await this.setStateAsync('stateInspector.safeToDeleteCount', 0, true);
+        await this.setStateAsync('stateInspector.reviewRequiredCount', 0, true);
+
+        await this.setStateAsync('stateInspector.details', JSON.stringify({
+            timestamp: null,
+            totalIssues: 0,
+            categories: {
+                orphaned: 0,
+                stale: 0,
+                duplicates: 0
+            }
+        }, null, 2), true);
     }
 
     /**

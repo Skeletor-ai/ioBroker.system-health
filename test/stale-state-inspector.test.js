@@ -102,7 +102,7 @@ describe('StaleStateInspector', () => {
             assert.strictEqual(inspector.staleStates[0].adapter, 'mqtt.0');
         });
 
-        it('should skip read-only states (common.write === false)', async () => {
+        it('should include read-only states (common.write === false)', async () => {
             const adapter = new MockAdapter();
             const now = Date.now();
             const oldTimestamp = now - (25 * 60 * 60 * 1000);
@@ -128,20 +128,20 @@ describe('StaleStateInspector', () => {
             const inspector = new StaleStateInspector(adapter, 24, []);
             await inspector.inspect();
 
-            assert.strictEqual(inspector.staleStates.length, 0, 'Should skip read-only states');
+            assert.strictEqual(inspector.staleStates.length, 1, 'Should include read-only states');
         });
 
-        it('should skip states with read=true and write=undefined (read-only)', async () => {
+        it('should include states with read=true and write=undefined (implicitly read-only)', async () => {
             const adapter = new MockAdapter();
             const now = Date.now();
             const oldTimestamp = now - (25 * 60 * 60 * 1000);
 
             adapter.foreignStates = {
-                'mqtt.0.info.connection': { val: true, ts: oldTimestamp }
+                'mqtt.0.sensor.connection': { val: true, ts: oldTimestamp }
             };
 
             adapter.foreignObjects = {
-                'mqtt.0.info.connection': {
+                'mqtt.0.sensor.connection': {
                     common: {
                         name: 'Connection',
                         type: 'boolean',
@@ -157,7 +157,7 @@ describe('StaleStateInspector', () => {
             const inspector = new StaleStateInspector(adapter, 24, []);
             await inspector.inspect();
 
-            assert.strictEqual(inspector.staleStates.length, 0, 'Should skip implicitly read-only states');
+            assert.strictEqual(inspector.staleStates.length, 1, 'Should include implicitly read-only states');
         });
 
         it('should skip states from inactive adapters', async () => {
