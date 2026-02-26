@@ -55,6 +55,14 @@
 - Automatic confidence scoring (high/medium)
 - Results available as JSON report in adapter states
 
+#### Performance and Resource Usage Analysis
+- **State update frequency analysis**: Identifies states with very frequent updates (< 100ms) that may cause unnecessary load
+- **History usage analysis**: Detects states with history enabled that rarely change, wasting storage
+- **Ack status monitoring**: Flags states frequently written without `ack=true`, indicating potential confirmation issues
+- **Large object tree detection**: Identifies adapters with excessive state counts that may indicate bloated configurations
+- **Actionable recommendations**: Provides specific guidance for each detected performance issue
+- **Configurable thresholds**: Customize frequency limits, tree size thresholds, and monitoring duration
+
 #### Coming Soon
 - Identify unused objects and dead references
 - Visualize adapter dependencies
@@ -100,6 +108,10 @@ Configuration is done through the ioBroker admin interface.
 - **Duplicate similarity threshold** — Threshold for naming pattern detection, 0-1 (default: 0.9)
 - **Enable stale detection** — Monitor states for staleness (default: true)
 - **Stale threshold (hours)** — Default threshold for stale state detection (default: 24)
+- **Enable performance analysis** — Analyze performance and resource usage (default: true)
+- **High-frequency threshold (ms)** — Flag states updated faster than this interval (default: 100)
+- **Large object tree threshold** — Flag adapters with more states than this count (default: 1000)
+- **Monitoring duration (ms)** — How long to monitor state changes for frequency analysis (default: 60000)
 
 ## Dashboard
 
