@@ -85,6 +85,53 @@
             "unit": "MB"
         },
 
+        // === Log Monitoring Section ===
+        "_logHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "logMonitoring",
+            "size": 4
+        },
+        "_logStatus": {
+            "newLine": true,
+            "type": "state",
+            "oid": "logs.status",
+            "label": "logStatus",
+            "sm": 3
+        },
+        "_logTotalErrors": {
+            "type": "state",
+            "oid": "logs.totalErrors",
+            "label": "logTotalErrors",
+            "sm": 3
+        },
+        "_logTotalWarnings": {
+            "type": "state",
+            "oid": "logs.totalWarnings",
+            "label": "logTotalWarnings",
+            "sm": 3
+        },
+        "_logInstanceCount": {
+            "type": "state",
+            "oid": "logs.instanceCount",
+            "label": "logInstanceCount",
+            "sm": 3
+        },
+        "_logDetailsHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "logDetails",
+            "size": 4
+        },
+        "_logDetails": {
+            "newLine": true,
+            "type": "textSendTo",
+            "container": "html",
+            "command": "getLogDetails",
+            "jsonData": "{\"lang\": \"${systemLang}\"}",
+            "sm": 12
+        },
+
         // === State Inspector Section ===
         "_inspectorHeader": {
             "newLine": true,

@@ -70,6 +70,10 @@
     "reviewRequired": "Review Required",
     "noDataAvailable": "No data available. Run a health check first.",
     "noIssuesFound": "No issues found.",
+    "summary": "Summary",
+    "errors": "Errors",
+    "warnings": "Warnings",
+    "instances": "Instances",
     "filterByCategory": "Filter by category",
     "filterByAdapter": "Filter by adapter",
     "all": "All"

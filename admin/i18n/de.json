@@ -70,6 +70,10 @@
     "reviewRequired": "Überprüfung erforderlich",
     "noDataAvailable": "Keine Daten verfügbar. Bitte zuerst einen Health-Check ausführen.",
     "noIssuesFound": "Keine Probleme gefunden.",
+    "summary": "Zusammenfassung",
+    "errors": "Fehler",
+    "warnings": "Warnungen",
+    "instances": "Instanzen",
     "filterByCategory": "Nach Kategorie filtern",
     "filterByAdapter": "Nach Adapter filtern",
     "all": "Alle"
