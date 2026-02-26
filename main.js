@@ -228,6 +228,10 @@ class Health extends utils.Adapter {
                 role: 'indicator.alarm',
                 read: true,
                 write: false,
+                states: {
+                    'false': 'No',
+                    'true': 'Yes'
+                }
             },
             native: {},
         });
