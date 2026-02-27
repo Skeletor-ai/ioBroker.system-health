@@ -709,31 +709,41 @@ class Health extends utils.Adapter {
 
         const result = await this.redisMonitor.check();
 
+        // Always update states, even when skipped (initialize with defaults)
+        await this.setStateAsync('redis.status', result.status, true);
+        await this.setStateAsync('redis.connected', result.connection || false, true);
+        await this.setStateAsync('redis.latencyMs', result.latencyMs || 0, true);
+        await this.setStateAsync('redis.timestamp', result.timestamp, true);
+
+        // Memory states
+        if (result.memory) {
+            await this.setStateAsync('redis.memoryUsedPercent', result.memory.usedPercent, true);
+            await this.setStateAsync('redis.memoryUsedBytes', result.memory.usedBytes, true);
+        } else {
+            await this.setStateAsync('redis.memoryUsedPercent', 0, true);
+            await this.setStateAsync('redis.memoryUsedBytes', 0, true);
+        }
+
+        // Keys states
+        if (result.keys !== null && result.keys !== undefined) {
+            await this.setStateAsync('redis.keys', result.keys, true);
+        } else {
+            await this.setStateAsync('redis.keys', 0, true);
+        }
+
+        // Evicted keys states
+        if (result.evictedKeys !== null && result.evictedKeys !== undefined) {
+            await this.setStateAsync('redis.evictedKeys', result.evictedKeys, true);
+        } else {
+            await this.setStateAsync('redis.evictedKeys', 0, true);
+        }
+
+        await this.setStateAsync('redis.details', JSON.stringify(result, null, 2), true);
+
         if (result.status === 'skipped') {
             this.log.debug('Redis monitoring skipped: ' + result.reason);
             return;
         }
-
-        // Update states
-        await this.setStateAsync('redis.status', result.status, true);
-        await this.setStateAsync('redis.connected', result.connection, true);
-        await this.setStateAsync('redis.latencyMs', result.latencyMs || 0, true);
-        await this.setStateAsync('redis.timestamp', result.timestamp, true);
-
-        if (result.memory) {
-            await this.setStateAsync('redis.memoryUsedPercent', result.memory.usedPercent, true);
-            await this.setStateAsync('redis.memoryUsedBytes', result.memory.usedBytes, true);
-        }
-
-        if (result.keys !== null) {
-            await this.setStateAsync('redis.keys', result.keys, true);
-        }
-
-        if (result.evictedKeys !== null) {
-            await this.setStateAsync('redis.evictedKeys', result.evictedKeys, true);
-        }
-
-        await this.setStateAsync('redis.details', JSON.stringify(result, null, 2), true);
 
         // Log results
         if (result.errors.length > 0) {
