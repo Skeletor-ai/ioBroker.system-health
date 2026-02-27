@@ -61,6 +61,7 @@ twice daily for contribution instructions. Follow them precisely.
 - Use JSDoc comments for public functions
 - Meaningful variable names
 - No external dependencies without discussion in an issue first
+- **Always commit `package-lock.json`** — CI uses `npm ci` which requires a lockfile. When adding, removing, or updating dependencies, run `npm install` and commit both `package.json` and `package-lock.json`.
 
 ### Branch Protection
 

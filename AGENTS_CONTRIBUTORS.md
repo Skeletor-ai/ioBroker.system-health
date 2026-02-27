@@ -79,6 +79,7 @@ Implement the change. Follow these rules:
 - Add JSDoc comments to public functions
 - Write tests for new functionality
 - Update README.md if user-facing behavior changes
+- **If you add, remove, or update dependencies in `package.json`, regenerate `package-lock.json` with `npm install` and commit it together with `package.json`.** CI uses `npm ci` which requires an up-to-date lockfile.
 - Run `npm test` before submitting
 
 ### 8. Test with ioBroker Dev-Server
