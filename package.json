@@ -18,12 +18,15 @@
     "test": "node --test test/*.test.js",
     "test:e2e": "node test/admin-tab.e2e.js",
     "lint": "eslint .",
-    "dev": "dev-server watch"
+    "dev": "dev-server watch",
+    "test:integration": "echo \"No integration tests yet\""
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^3.0.0"
+    "@iobroker/adapter-core": "^3.0.0",
+    "playwright": "^1.58.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "eslint": "^9.0.0"
   },
   "engines": {
