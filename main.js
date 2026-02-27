@@ -118,19 +118,19 @@ class Health extends utils.Adapter {
 
             if (command === 'getOrphanedDetails') {
                 const lang = (obj.message && obj.message.lang) || 'en';
-                const html = this.renderOrphanedDetailsHtml(lang);
+                const html = await this.renderOrphanedDetailsHtml(lang);
                 if (obj.callback) {
                     this.sendTo(obj.from, obj.command, html, obj.callback);
                 }
             } else if (command === 'getStaleDetails') {
                 const lang = (obj.message && obj.message.lang) || 'en';
-                const html = this.renderStaleDetailsHtml(lang);
+                const html = await this.renderStaleDetailsHtml(lang);
                 if (obj.callback) {
                     this.sendTo(obj.from, obj.command, html, obj.callback);
                 }
             } else if (command === 'getDuplicateDetails') {
                 const lang = (obj.message && obj.message.lang) || 'en';
-                const html = this.renderDuplicateDetailsHtml(lang);
+                const html = await this.renderDuplicateDetailsHtml(lang);
                 if (obj.callback) {
                     this.sendTo(obj.from, obj.command, html, obj.callback);
                 }
@@ -872,6 +872,10 @@ class Health extends utils.Adapter {
             hour12: false
         }), true);
 
+        const orphanedStates = this.orphanedInspector ? this.orphanedInspector.orphanedStates : [];
+        const staleStates = this.staleInspector ? this.staleInspector.staleStates : [];
+        const duplicateStates = this.duplicateInspector ? this.duplicateInspector.duplicates : [];
+
         const details = {
             timestamp: new Date().toISOString(),
             totalIssues,
@@ -880,9 +884,12 @@ class Health extends utils.Adapter {
                 stale: staleCount,
                 duplicates: duplicateCount
             },
+            orphaned: orphanedStates,
+            stale: staleStates,
+            duplicates: duplicateStates,
             orphanedByCategory: this.orphanedInspector ? this.orphanedInspector.categorizeOrphans() : {},
             staleByAdapter: this.staleInspector ? this.staleInspector.groupByAdapter() : {},
-            duplicateGroups: this.duplicateInspector ? this.duplicateInspector.duplicates.length : 0
+            duplicateGroups: duplicateStates.length
         };
 
         await this.setStateAsync('stateInspector.details', JSON.stringify(details, null, 2), true);
@@ -952,16 +959,72 @@ class Health extends utils.Adapter {
     }
 
     /**
-     * Render HTML table for orphaned state details.
-     * @param {string} [lang] - Language code
-     * @returns {string} HTML string
+     * Read persisted state inspector details from stateInspector.details.
+     * @returns {Promise<Record<string, any>>}
      */
-    renderOrphanedDetailsHtml(lang = 'en') {
-        if (!this.orphanedInspector || this.orphanedInspector.orphanedStates.length === 0) {
-            return `<div style="padding:8px;opacity:0.6;">${this.t('noOrphanedStates', lang)}</div>`;
+    async getPersistedInspectorDetails() {
+        const detailsState = await this.getStateAsync('stateInspector.details');
+        if (!detailsState || typeof detailsState.val !== 'string' || !detailsState.val.trim()) {
+            return {};
         }
 
-        const states = this.orphanedInspector.orphanedStates;
+        try {
+            return JSON.parse(detailsState.val);
+        } catch (e) {
+            this.log.warn(`Could not parse stateInspector.details: ${e.message}`);
+            return {};
+        }
+    }
+
+    /**
+     * Get orphaned states for detail rendering (prefers in-memory, falls back to persisted state).
+     * @returns {Promise<any[]>}
+     */
+    async getOrphanedStatesForDetails() {
+        if (this.orphanedInspector && Array.isArray(this.orphanedInspector.orphanedStates)) {
+            return this.orphanedInspector.orphanedStates;
+        }
+
+        const details = await this.getPersistedInspectorDetails();
+        return Array.isArray(details.orphaned) ? details.orphaned : [];
+    }
+
+    /**
+     * Get stale states for detail rendering (prefers in-memory, falls back to persisted state).
+     * @returns {Promise<any[]>}
+     */
+    async getStaleStatesForDetails() {
+        if (this.staleInspector && Array.isArray(this.staleInspector.staleStates)) {
+            return this.staleInspector.staleStates;
+        }
+
+        const details = await this.getPersistedInspectorDetails();
+        return Array.isArray(details.stale) ? details.stale : [];
+    }
+
+    /**
+     * Get duplicate groups for detail rendering (prefers in-memory, falls back to persisted state).
+     * @returns {Promise<any[]>}
+     */
+    async getDuplicateGroupsForDetails() {
+        if (this.duplicateInspector && Array.isArray(this.duplicateInspector.duplicates)) {
+            return this.duplicateInspector.duplicates;
+        }
+
+        const details = await this.getPersistedInspectorDetails();
+        return Array.isArray(details.duplicates) ? details.duplicates : [];
+    }
+
+    /**
+     * Render HTML table for orphaned state details.
+     * @param {string} [lang] - Language code
+     * @returns {Promise<string>} HTML string
+     */
+    async renderOrphanedDetailsHtml(lang = 'en') {
+        const states = await this.getOrphanedStatesForDetails();
+        if (states.length === 0) {
+            return `<div style="padding:8px;opacity:0.6;">${this.t('noOrphanedStates', lang)}</div>`;
+        }
         const total = states.length;
         const DISPLAY_LIMIT = 200;
         const displayStates = states.slice(0, DISPLAY_LIMIT);
@@ -1006,14 +1069,13 @@ class Health extends utils.Adapter {
     /**
      * Render HTML table for stale state details.
      * @param {string} [lang] - Language code
-     * @returns {string} HTML string
+     * @returns {Promise<string>} HTML string
      */
-    renderStaleDetailsHtml(lang = 'en') {
-        if (!this.staleInspector || this.staleInspector.staleStates.length === 0) {
+    async renderStaleDetailsHtml(lang = 'en') {
+        const states = await this.getStaleStatesForDetails();
+        if (states.length === 0) {
             return `<div style="padding:8px;opacity:0.6;">${this.t('noStaleStates', lang)}</div>`;
         }
-
-        const states = this.staleInspector.staleStates;
         const total = states.length;
         const DISPLAY_LIMIT = 200;
         const displayStates = states.slice(0, DISPLAY_LIMIT);
@@ -1080,16 +1142,17 @@ class Health extends utils.Adapter {
     /**
      * Render HTML table for duplicate state details.
      * @param {string} [lang] - Language code
-     * @returns {string} HTML string
+     * @returns {Promise<string>} HTML string
      */
-    renderDuplicateDetailsHtml(lang = 'en') {
-        if (!this.duplicateInspector || this.duplicateInspector.duplicates.length === 0) {
+    async renderDuplicateDetailsHtml(lang = 'en') {
+        const duplicateGroups = await this.getDuplicateGroupsForDetails();
+        if (duplicateGroups.length === 0) {
             return `<div style="padding:8px;opacity:0.6;">${this.t('noDuplicates', lang)}</div>`;
         }
 
         const MAX = 50;
-        const groups = this.duplicateInspector.duplicates.slice(0, MAX);
-        const total = this.duplicateInspector.duplicates.length;
+        const groups = duplicateGroups.slice(0, MAX);
+        const total = duplicateGroups.length;
 
         let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
         html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">#</th><th style="padding:6px;text-align:left;">${this.t('states', lang)}</th><th style="padding:6px;text-align:left;">${this.t('similarity', lang)}</th></tr>`;
