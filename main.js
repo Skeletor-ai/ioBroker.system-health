@@ -904,25 +904,40 @@ class Health extends utils.Adapter {
 
         if (this.orphanedInspector) {
             const orphanSuggestions = this.orphanedInspector.getCleanupSuggestions();
-            cleanupSuggestions.safeToDelete.push(...orphanSuggestions.safeToDelete);
-            cleanupSuggestions.reviewRequired.push(...orphanSuggestions.reviewRequired);
-            cleanupSuggestions.keepForNow.push(...orphanSuggestions.keepForNow);
+            if (orphanSuggestions && orphanSuggestions.safeToDelete) {
+                cleanupSuggestions.safeToDelete.push(...orphanSuggestions.safeToDelete);
+                cleanupSuggestions.reviewRequired.push(...orphanSuggestions.reviewRequired);
+                cleanupSuggestions.keepForNow.push(...orphanSuggestions.keepForNow);
+            } else {
+                this.log.warn('orphanedInspector.getCleanupSuggestions() returned invalid data');
+            }
         }
 
         if (this.staleInspector) {
             const staleSuggestions = this.staleInspector.getCleanupSuggestions();
-            cleanupSuggestions.safeToDelete.push(...staleSuggestions.safeToDelete);
-            cleanupSuggestions.reviewRequired.push(...staleSuggestions.reviewRequired);
-            cleanupSuggestions.keepForNow.push(...staleSuggestions.keepForNow);
+            if (staleSuggestions && staleSuggestions.safeToDelete) {
+                cleanupSuggestions.safeToDelete.push(...staleSuggestions.safeToDelete);
+                cleanupSuggestions.reviewRequired.push(...staleSuggestions.reviewRequired);
+                cleanupSuggestions.keepForNow.push(...staleSuggestions.keepForNow);
+            } else {
+                this.log.warn('staleInspector.getCleanupSuggestions() returned invalid data');
+            }
         }
 
         // Update cleanup suggestion states
         await this.setStateAsync('stateInspector.cleanupSuggestions', JSON.stringify(cleanupSuggestions, null, 2), true);
-        await this.setStateAsync('stateInspector.safeToDeleteCount', cleanupSuggestions.safeToDelete.length, true);
-        await this.setStateAsync('stateInspector.reviewRequiredCount', cleanupSuggestions.reviewRequired.length, true);
+        
+        // Update counter states with detailed logging
+        const safeToDeleteCount = cleanupSuggestions.safeToDelete.length;
+        const reviewRequiredCount = cleanupSuggestions.reviewRequired.length;
+        
+        this.log.debug(`Updating cleanup counters: safeToDelete=${safeToDeleteCount}, reviewRequired=${reviewRequiredCount}`);
+        
+        await this.setStateAsync('stateInspector.safeToDeleteCount', safeToDeleteCount, true);
+        await this.setStateAsync('stateInspector.reviewRequiredCount', reviewRequiredCount, true);
 
         this.log.info(`State Inspector summary: ${totalIssues} total issues (${orphanedCount} orphaned, ${staleCount} stale, ${duplicateCount} duplicates)`);
-        this.log.info(`Cleanup suggestions: ${cleanupSuggestions.safeToDelete.length} safe to delete, ${cleanupSuggestions.reviewRequired.length} review required`);
+        this.log.info(`Cleanup suggestions: ${safeToDeleteCount} safe to delete, ${reviewRequiredCount} review required`);
     }
 
     /**
