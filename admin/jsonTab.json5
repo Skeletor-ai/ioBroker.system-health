@@ -132,6 +132,54 @@
             "sm": 12
         },
 
+        // === Redis Monitoring Section ===
+        "_redisHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "redisMonitoring",
+            "size": 4
+        },
+        "_redisStatus": {
+            "newLine": true,
+            "type": "state",
+            "oid": "redis.status",
+            "label": "redisStatus",
+            "sm": 3
+        },
+        "_redisConnected": {
+            "type": "state",
+            "oid": "redis.connected",
+            "label": "redisConnected",
+            "sm": 3
+        },
+        "_redisMemory": {
+            "type": "state",
+            "oid": "redis.memoryUsedPercent",
+            "label": "redisMemoryPercent",
+            "sm": 3,
+            "unit": "%"
+        },
+        "_redisLatency": {
+            "type": "state",
+            "oid": "redis.latencyMs",
+            "label": "redisLatency",
+            "sm": 3,
+            "unit": "ms"
+        },
+        "_redisKeys": {
+            "newLine": true,
+            "type": "state",
+            "oid": "redis.keys",
+            "label": "redisKeys",
+            "sm": 6
+        },
+        "_redisEvicted": {
+            "type": "state",
+            "oid": "redis.evictedKeys",
+            "label": "redisEvictedKeys",
+            "sm": 6
+        },
+
         // === State Inspector Section ===
         "_inspectorHeader": {
             "newLine": true,
