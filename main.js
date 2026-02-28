@@ -499,6 +499,22 @@ class Health extends utils.Adapter {
             native: {},
         });
 
+        // Initialize Redis monitoring states to avoid null values in admin UI
+        // before the first check has been completed.
+        await this.setStateAsync('redis.status', 'skipped', true);
+        await this.setStateAsync('redis.connected', false, true);
+        await this.setStateAsync('redis.memoryUsedPercent', 0, true);
+        await this.setStateAsync('redis.memoryUsedBytes', 0, true);
+        await this.setStateAsync('redis.keys', 0, true);
+        await this.setStateAsync('redis.evictedKeys', 0, true);
+        await this.setStateAsync('redis.latencyMs', 0, true);
+        await this.setStateAsync('redis.details', JSON.stringify({
+            status: 'skipped',
+            reason: 'Not yet checked',
+            timestamp: null
+        }, null, 2), true);
+        await this.setStateAsync('redis.timestamp', Date.now(), true);
+
         // Initialize inspector summary values to avoid null values in admin UI
         // before the first complete scan has finished.
         await this.setStateAsync('stateInspector.totalIssues', 0, true);
