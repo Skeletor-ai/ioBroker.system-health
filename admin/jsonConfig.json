@@ -155,6 +155,31 @@
             "sm": 6,
             "hidden": "!data.enableRedisMonitoring"
         },
+        "redisHost": {
+            "type": "text",
+            "label": "Redis host (optional)",
+            "help": "Leave empty for auto-detection. Set manually if auto-detection fails.",
+            "default": "",
+            "sm": 6,
+            "hidden": "!data.enableRedisMonitoring"
+        },
+        "redisPort": {
+            "type": "number",
+            "label": "Redis port (optional)",
+            "help": "Leave empty for auto-detection (default: 6379)",
+            "min": 1,
+            "max": 65535,
+            "sm": 6,
+            "hidden": "!data.enableRedisMonitoring"
+        },
+        "redisPassword": {
+            "type": "password",
+            "label": "Redis password (optional)",
+            "help": "Leave empty for auto-detection or if no password is set",
+            "default": "",
+            "sm": 6,
+            "hidden": "!data.enableRedisMonitoring"
+        },
 
         "_stateHeader": {
             "type": "header",
