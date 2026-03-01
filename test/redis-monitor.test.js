@@ -16,6 +16,11 @@ describe('RedisMonitor', () => {
                 error: () => {},
                 debug: () => {},
             },
+            config: {
+                redisHost: '',
+                redisPort: undefined,
+                redisPassword: '',
+            },
             getForeignObjectsAsync: async () => ({}),
         };
         monitor = new RedisMonitor(adapter);
@@ -42,6 +47,66 @@ describe('RedisMonitor', () => {
     });
 
     describe('detectRedisConfig', () => {
+        test('should use manual host configuration (precedence over auto-detection)', async () => {
+            adapter.config.redisHost = 'manual.redis.host';
+            adapter.config.redisPort = 7000;
+            adapter.config.redisPassword = 'manual-secret';
+
+            // Even if auto-detection finds Redis, manual config should win
+            adapter.getForeignObjectsAsync = async () => ({
+                'system.host.iobroker': {
+                    native: {
+                        objects: { type: 'jsonl' },
+                        states: { type: 'redis', host: 'auto.redis.host', port: 6379 },
+                    }
+                }
+            });
+
+            const config = await monitor.detectRedisConfig();
+            assert.ok(config);
+            assert.strictEqual(config.host, 'manual.redis.host');
+            assert.strictEqual(config.port, 7000);
+            assert.strictEqual(config.password, 'manual-secret');
+            assert.strictEqual(config.objectsIsRedis, false);
+            assert.strictEqual(config.statesIsRedis, false);
+        });
+
+        test('should use manual host + default port', async () => {
+            adapter.config.redisHost = '10.0.0.50';
+            adapter.config.redisPort = undefined;
+            adapter.config.redisPassword = '';
+
+            const config = await monitor.detectRedisConfig();
+            assert.ok(config);
+            assert.strictEqual(config.host, '10.0.0.50');
+            assert.strictEqual(config.port, 6379);
+            assert.strictEqual(config.password, null);
+        });
+
+        test('should use manual host + custom port + no password', async () => {
+            adapter.config.redisHost = 'redis.example.com';
+            adapter.config.redisPort = 6380;
+            adapter.config.redisPassword = '';
+
+            const config = await monitor.detectRedisConfig();
+            assert.ok(config);
+            assert.strictEqual(config.host, 'redis.example.com');
+            assert.strictEqual(config.port, 6380);
+            assert.strictEqual(config.password, null);
+        });
+
+        test('should use manual host + password only (port defaults)', async () => {
+            adapter.config.redisHost = '192.168.1.50';
+            adapter.config.redisPort = undefined;
+            adapter.config.redisPassword = 'only-password';
+
+            const config = await monitor.detectRedisConfig();
+            assert.ok(config);
+            assert.strictEqual(config.host, '192.168.1.50');
+            assert.strictEqual(config.port, 6379);
+            assert.strictEqual(config.password, 'only-password');
+        });
+
         test('should return null if no Redis backend detected', async () => {
             adapter.getForeignObjectsAsync = async () => ({
                 'system.host.iobroker': {
