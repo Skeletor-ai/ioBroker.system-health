@@ -329,58 +329,7 @@ class Health extends utils.Adapter {
             native: {},
         });
 
-        // Redis monitoring states
-        await this.setObjectNotExistsAsync('redis.isAvailable', {
-            type: 'state',
-            common: { name: 'Redis backend is available', type: 'boolean', role: 'indicator', read: true, write: false },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.status', {
-            type: 'state',
-            common: { name: 'Redis status', type: 'string', role: 'text', read: true, write: false,
-                states: { ok: 'OK', warning: 'Warning', error: 'Error', skipped: 'Skipped' } },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.connected', {
-            type: 'state',
-            common: { name: 'Redis connected', type: 'boolean', role: 'indicator.reachable', read: true, write: false },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.memoryUsedPercent', {
-            type: 'state',
-            common: { name: 'Redis memory usage (%)', type: 'number', role: 'value', unit: '%', read: true, write: false },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.memoryUsedBytes', {
-            type: 'state',
-            common: { name: 'Redis memory used (bytes)', type: 'number', role: 'value', read: true, write: false },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.keys', {
-            type: 'state',
-            common: { name: 'Redis total keys', type: 'number', role: 'value', read: true, write: false },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.evictedKeys', {
-            type: 'state',
-            common: { name: 'Redis evicted keys', type: 'number', role: 'value', read: true, write: false },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.latencyMs', {
-            type: 'state',
-            common: { name: 'Redis ping latency (ms)', type: 'number', role: 'value', unit: 'ms', read: true, write: false },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.details', {
-            type: 'state',
-            common: { name: 'Redis detailed report (JSON)', type: 'string', role: 'json', read: true, write: false },
-            native: {},
-        });
-        await this.setObjectNotExistsAsync('redis.timestamp', {
-            type: 'state',
-            common: { name: 'Last Redis check timestamp', type: 'number', role: 'date', read: true, write: false },
-            native: {},
-        });
+
 
         // State Inspector summary states
         await this.setObjectNotExistsAsync('stateInspector.totalIssues', {
@@ -504,21 +453,7 @@ class Health extends utils.Adapter {
             native: {},
         });
 
-        // Initialize Redis monitoring states to avoid null values in admin UI
-        // before the first check has been completed.
-        await this.setStateAsync('redis.status', 'skipped', true);
-        await this.setStateAsync('redis.connected', false, true);
-        await this.setStateAsync('redis.memoryUsedPercent', 0, true);
-        await this.setStateAsync('redis.memoryUsedBytes', 0, true);
-        await this.setStateAsync('redis.keys', 0, true);
-        await this.setStateAsync('redis.evictedKeys', 0, true);
-        await this.setStateAsync('redis.latencyMs', 0, true);
-        await this.setStateAsync('redis.details', JSON.stringify({
-            status: 'skipped',
-            reason: 'Not yet checked',
-            timestamp: null
-        }, null, 2), true);
-        await this.setStateAsync('redis.timestamp', Date.now(), true);
+
 
         // Initialize inspector summary values to avoid null values in admin UI
         // before the first complete scan has finished.
@@ -726,7 +661,70 @@ class Health extends utils.Adapter {
     }
 
     /**
+     * Create Redis monitoring states lazily (only if Redis is detected).
+     * This ensures Redis section is not shown in the UI if Redis is not in use.
+     * @private
+     */
+    async _createRedisStatesIfNeeded() {
+        // Check if states already created by looking for one of them
+        const existingState = await this.getObjectAsync('redis.status');
+        if (existingState) {
+            return; // Already created
+        }
+
+        this.log.debug('Creating Redis monitoring states (Redis detected)');
+
+        await this.setObjectNotExistsAsync('redis.status', {
+            type: 'state',
+            common: { name: 'Redis status', type: 'string', role: 'text', read: true, write: false,
+                states: { ok: 'OK', warning: 'Warning', error: 'Error' } },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.connected', {
+            type: 'state',
+            common: { name: 'Redis connected', type: 'boolean', role: 'indicator.reachable', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.memoryUsedPercent', {
+            type: 'state',
+            common: { name: 'Redis memory usage (%)', type: 'number', role: 'value', unit: '%', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.memoryUsedBytes', {
+            type: 'state',
+            common: { name: 'Redis memory used (bytes)', type: 'number', role: 'value', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.keys', {
+            type: 'state',
+            common: { name: 'Redis total keys', type: 'number', role: 'value', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.evictedKeys', {
+            type: 'state',
+            common: { name: 'Redis evicted keys', type: 'number', role: 'value', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.latencyMs', {
+            type: 'state',
+            common: { name: 'Redis ping latency (ms)', type: 'number', role: 'value', unit: 'ms', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.details', {
+            type: 'state',
+            common: { name: 'Redis detailed report (JSON)', type: 'string', role: 'json', read: true, write: false },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('redis.timestamp', {
+            type: 'state',
+            common: { name: 'Last Redis check timestamp', type: 'number', role: 'date', read: true, write: false },
+            native: {},
+        });
+    }
+
+    /**
      * Run Redis health check.
+     * Only creates and updates Redis states if Redis backend is actually in use.
      */
     async runRedisCheck() {
         if (!this.redisMonitor) {
@@ -739,14 +737,14 @@ class Health extends utils.Adapter {
 
         const result = await this.redisMonitor.check();
 
-        // Set availability state
-        const isAvailable = result.status !== 'skipped';
-        await this.setStateAsync('redis.isAvailable', isAvailable, true);
-
+        // If Redis is not detected, skip state creation and updates
         if (result.status === 'skipped') {
             this.log.debug('Redis monitoring skipped: ' + result.reason);
             return;
         }
+
+        // Redis is in use: create states if they don't exist yet
+        await this._createRedisStatesIfNeeded();
 
         // Update states
         await this.setStateAsync('redis.status', result.status, true);
