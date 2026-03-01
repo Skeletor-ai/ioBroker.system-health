@@ -133,6 +133,16 @@ describe('OrphanedStateInspector', () => {
             assert.strictEqual(inspector.shouldIgnore('alias.0.sensor.temperature'), true);
             assert.strictEqual(inspector.shouldIgnore('zigbee.0.state'), false);
         });
+
+        it('should ignore own system-health states by default', () => {
+            const adapter = new MockAdapter();
+            const inspector = new OrphanedStateInspector(adapter, []);
+
+            assert.strictEqual(inspector.shouldIgnore('system-health.0.logs.totalErrors'), true);
+            assert.strictEqual(inspector.shouldIgnore('system-health.0.stateInspector.lastScan'), true);
+            assert.strictEqual(inspector.shouldIgnore('system-health.0.inspector.orphanedStates.count'), true);
+            assert.strictEqual(inspector.shouldIgnore('zigbee.0.state'), false);
+        });
     });
 
     describe('reference extraction', () => {
