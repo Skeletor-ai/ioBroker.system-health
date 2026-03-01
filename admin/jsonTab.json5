@@ -83,7 +83,68 @@
             "label": "diskFree",
             "sm": 4,
             "unit": "MB"
+        },        // === Redis Monitoring Section ===
+        "_redisHeader": {
+            "newLine": true,
+            "type": "header",
+            "text": "redisMonitoring",
+            "size": 4
         },
+        "_redisStatus": {
+            "newLine": true,
+            "type": "state",
+            "oid": "redis.status",
+            "label": "redisStatus",
+            "sm": 3
+        },
+        "_redisConnected": {
+            "type": "state",
+            "oid": "redis.connected",
+            "label": "redisConnected",
+            "sm": 3
+        },
+        "_redisMemoryUsedPercent": {
+            "type": "state",
+            "oid": "redis.memoryUsedPercent",
+            "label": "redisMemoryUsedPercent",
+            "sm": 3,
+            "unit": "%"
+        },
+        "_redisLatency": {
+            "type": "state",
+            "oid": "redis.latencyMs",
+            "label": "redisLatency",
+            "sm": 3,
+            "unit": "ms"
+        },
+        "_redisMemoryUsedBytes": {
+            "newLine": true,
+            "type": "state",
+            "oid": "redis.memoryUsedBytes",
+            "label": "redisMemoryUsedBytes",
+            "sm": 3,
+            "unit": "bytes"
+        },
+        "_redisKeys": {
+            "type": "state",
+            "oid": "redis.keys",
+            "label": "redisKeys",
+            "sm": 3
+        },
+        "_redisEvictedKeys": {
+            "type": "state",
+            "oid": "redis.evictedKeys",
+            "label": "redisEvictedKeys",
+            "sm": 3
+        },
+        "_redisTimestamp": {
+            "type": "state",
+            "oid": "redis.timestamp",
+            "label": "redisTimestamp",
+            "sm": 3
+        },
+
+
 
         // === Log Monitoring Section ===
         "_logHeader": {

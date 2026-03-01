@@ -93,5 +93,8 @@
     "redisPersistence": "Persistenz",
     "filterByCategory": "Nach Kategorie filtern",
     "filterByAdapter": "Nach Adapter filtern",
-    "all": "Alle"
+    "all": "Alle",
+    "redisMemoryUsedPercent": "Speichernutzung (%)",
+    "redisMemoryUsedBytes": "Speichernutzung (Bytes)",
+    "redisTimestamp": "Zuletzt aktualisiert"
 }
