@@ -88,34 +88,39 @@
             "newLine": true,
             "type": "header",
             "text": "redisMonitoring",
-            "size": 4
+            "size": 4,
+            "hidden": "!data['redis.isAvailable']"
         },
         "_redisStatus": {
             "newLine": true,
             "type": "state",
             "oid": "redis.status",
             "label": "redisStatus",
-            "sm": 3
+            "sm": 3,
+            "hidden": "!data['redis.isAvailable']"
         },
         "_redisConnected": {
             "type": "state",
             "oid": "redis.connected",
             "label": "redisConnected",
-            "sm": 3
+            "sm": 3,
+            "hidden": "!data['redis.isAvailable']"
         },
         "_redisMemoryUsedPercent": {
             "type": "state",
             "oid": "redis.memoryUsedPercent",
             "label": "redisMemoryUsedPercent",
             "sm": 3,
-            "unit": "%"
+            "unit": "%",
+            "hidden": "!data['redis.isAvailable']"
         },
         "_redisLatency": {
             "type": "state",
             "oid": "redis.latencyMs",
             "label": "redisLatency",
             "sm": 3,
-            "unit": "ms"
+            "unit": "ms",
+            "hidden": "!data['redis.isAvailable']"
         },
         "_redisMemoryUsedBytes": {
             "newLine": true,
@@ -123,25 +128,29 @@
             "oid": "redis.memoryUsedBytes",
             "label": "redisMemoryUsedBytes",
             "sm": 3,
-            "unit": "bytes"
+            "unit": "bytes",
+            "hidden": "!data['redis.isAvailable']"
         },
         "_redisKeys": {
             "type": "state",
             "oid": "redis.keys",
             "label": "redisKeys",
-            "sm": 3
+            "sm": 3,
+            "hidden": "!data['redis.isAvailable']"
         },
         "_redisEvictedKeys": {
             "type": "state",
             "oid": "redis.evictedKeys",
             "label": "redisEvictedKeys",
-            "sm": 3
+            "sm": 3,
+            "hidden": "!data['redis.isAvailable']"
         },
         "_redisTimestamp": {
             "type": "state",
             "oid": "redis.timestamp",
             "label": "redisTimestamp",
-            "sm": 3
+            "sm": 3,
+            "hidden": "!data['redis.isAvailable']"
         },
 
 

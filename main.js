@@ -330,6 +330,11 @@ class Health extends utils.Adapter {
         });
 
         // Redis monitoring states
+        await this.setObjectNotExistsAsync('redis.isAvailable', {
+            type: 'state',
+            common: { name: 'Redis backend is available', type: 'boolean', role: 'indicator', read: true, write: false },
+            native: {},
+        });
         await this.setObjectNotExistsAsync('redis.status', {
             type: 'state',
             common: { name: 'Redis status', type: 'string', role: 'text', read: true, write: false,
@@ -733,6 +738,10 @@ class Health extends utils.Adapter {
         }
 
         const result = await this.redisMonitor.check();
+
+        // Set availability state
+        const isAvailable = result.status !== 'skipped';
+        await this.setStateAsync('redis.isAvailable', isAvailable, true);
 
         if (result.status === 'skipped') {
             this.log.debug('Redis monitoring skipped: ' + result.reason);
