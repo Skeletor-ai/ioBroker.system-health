@@ -533,6 +533,15 @@ class Health extends utils.Adapter {
                 duplicates: 0
             }
         }, null, 2), true);
+
+        // Initialize log monitoring values to avoid null values in admin UI
+        // before the first log scan has finished.
+        await this.setStateAsync('logs.totalErrors', 0, true);
+        await this.setStateAsync('logs.totalWarnings', 0, true);
+        await this.setStateAsync('logs.instanceCount', 0, true);
+        await this.setStateAsync('logs.status', 'ok', true);
+        await this.setStateAsync('logs.timestamp', Date.now(), true);
+        await this.setStateAsync('logs.details', JSON.stringify([]), true);
     }
 
     /**
