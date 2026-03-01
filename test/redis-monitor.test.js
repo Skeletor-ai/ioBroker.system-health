@@ -16,6 +16,11 @@ describe('RedisMonitor', () => {
                 error: () => {},
                 debug: () => {},
             },
+            config: {
+                redisHost: '',
+                redisPort: undefined,
+                redisPassword: '',
+            },
             getForeignObjectsAsync: async () => ({}),
         };
         monitor = new RedisMonitor(adapter);
