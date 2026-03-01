@@ -1239,6 +1239,104 @@ class Health extends utils.Adapter {
             .replace(/"/g, '&quot;');
     }
 
+
+    /**
+     * Build a hierarchical tree structure from flat state IDs.
+     * @param {Array} states - Array of state objects with {id, reason, ...}
+     * @returns {object} Tree structure
+     */
+    buildStateTree(states) {
+        const tree = {};
+        
+        for (const state of states) {
+            const parts = state.id.split('.');
+            let current = tree;
+            
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
+                
+                if (i === parts.length - 1) {
+                    // Leaf node - store the state data
+                    if (!current._leaves) current._leaves = [];
+                    current._leaves.push(state);
+                } else {
+                    // Folder node
+                    if (!current[part]) {
+                        current[part] = {};
+                    }
+                    current = current[part];
+                }
+            }
+        }
+        
+        return tree;
+    }
+
+    /**
+     * Render a state tree as collapsible HTML.
+     * @param {object} tree - Tree structure from buildStateTree
+     * @param {string} path - Current path (for display)
+     * @param {string} lang - Language code
+     * @param {number} depth - Current depth (for indentation)
+     * @returns {string} HTML string
+     */
+    renderStateTree(tree, path, lang, depth = 0) {
+        let html = '';
+        const indent = depth * 20;
+        const folders = Object.keys(tree).filter(k => k !== '_leaves').sort();
+        const leaves = tree._leaves || [];
+
+        // Render folders first
+        for (const folder of folders) {
+            const fullPath = path ? `${path}.${folder}` : folder;
+            const count = this.countStatesInTree(tree[folder]);
+            
+            // Generate unique ID for collapse toggle
+            const toggleId = `toggle_${fullPath.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            
+            html += `<div style="margin-left:${indent}px;margin-top:4px;">`;
+            html += `<div style="cursor:pointer;padding:4px;background:rgba(128,128,128,0.1);border-radius:3px;font-family:monospace;font-size:12px;" onclick="document.getElementById('${toggleId}').style.display = document.getElementById('${toggleId}').style.display === 'none' ? 'block' : 'none';">`;
+            html += `<span style="display:inline-block;width:16px;">▶</span>`;
+            html += `<strong>${this.escapeHtml(folder)}</strong>`;
+            html += ` <span style="opacity:0.6;font-size:11px;">(${count})</span>`;
+            html += `</div>`;
+            html += `<div id="${toggleId}" style="display:none;">`;
+            html += this.renderStateTree(tree[folder], fullPath, lang, depth + 1);
+            html += `</div>`;
+            html += `</div>`;
+        }
+
+        // Render leaf states
+        if (leaves.length > 0) {
+            html += '<div style="' + (depth > 0 ? `margin-left:${indent + 20}px;` : '') + 'margin-top:4px;">';
+            for (const leaf of leaves) {
+                const leafName = leaf.id.split('.').pop();
+                html += `<div style="padding:4px;border-bottom:1px solid rgba(128,128,128,0.1);font-size:12px;">`;
+                html += `<div style="font-family:monospace;font-weight:500;">${this.escapeHtml(leafName)}</div>`;
+                html += `<div style="opacity:0.7;font-size:11px;margin-top:2px;">${this.escapeHtml(leaf.reason)}</div>`;
+                html += `</div>`;
+            }
+            html += '</div>';
+        }
+
+        return html;
+    }
+
+    /**
+     * Count total states in a tree (including all subtrees).
+     * @param {object} tree - Tree structure
+     * @returns {number} Total count
+     */
+    countStatesInTree(tree) {
+        let count = (tree._leaves || []).length;
+        for (const key of Object.keys(tree)) {
+            if (key !== '_leaves') {
+                count += this.countStatesInTree(tree[key]);
+            }
+        }
+        return count;
+    }
+
     /**
      * Render HTML for cleanup suggestions.
      * @param {string} [lang] - Language code
@@ -1270,20 +1368,12 @@ class Health extends utils.Adapter {
             html += `<div style="margin-bottom:20px;">`;
             html += `<h4 style="margin:8px 0;color:#4caf50;">${this.t('safeToDelete', lang)} (${suggestions.safeToDelete.length})</h4>`;
             html += `<p style="font-size:12px;opacity:0.7;margin:4px 0 8px 0;">${this.t('safeToDeleteDescription', lang)}</p>`;
-            html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-            html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('reason', lang)}</th></tr>`;
             
-            const MAX = 20;
-            for (const s of suggestions.safeToDelete.slice(0, MAX)) {
-                html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
-                html += `<td style="padding:4px 6px;font-family:monospace;">${this.escapeHtml(s.id)}</td>`;
-                html += `<td style="padding:4px 6px;">${this.escapeHtml(s.reason)}</td>`;
-                html += '</tr>';
-            }
-            html += '</table>';
-            if (suggestions.safeToDelete.length > MAX) {
-                html += `<div style="padding:8px;opacity:0.6;font-size:11px;">${this.t('showingXofY', lang).replace('{0}', MAX).replace('{1}', suggestions.safeToDelete.length)}</div>`;
-            }
+            // Build tree and render
+            const tree = this.buildStateTree(suggestions.safeToDelete);
+            html += '<div style="background:rgba(0,0,0,0.02);padding:8px;border-radius:4px;">';
+            html += this.renderStateTree(tree, '', lang);
+            html += '</div>';
             html += '</div>';
         }
 
@@ -1292,20 +1382,12 @@ class Health extends utils.Adapter {
             html += `<div style="margin-bottom:20px;">`;
             html += `<h4 style="margin:8px 0;color:#ff9800;">${this.t('reviewRequired', lang)} (${suggestions.reviewRequired.length})</h4>`;
             html += `<p style="font-size:12px;opacity:0.7;margin:4px 0 8px 0;">${this.t('reviewRequiredDescription', lang)}</p>`;
-            html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-            html += `<tr style="opacity:0.7;font-weight:bold;"><th style="padding:6px;text-align:left;">${this.t('stateId', lang)}</th><th style="padding:6px;text-align:left;">${this.t('reason', lang)}</th></tr>`;
             
-            const MAX = 20;
-            for (const s of suggestions.reviewRequired.slice(0, MAX)) {
-                html += '<tr style="border-bottom:1px solid rgba(128,128,128,0.2);">';
-                html += `<td style="padding:4px 6px;font-family:monospace;">${this.escapeHtml(s.id)}</td>`;
-                html += `<td style="padding:4px 6px;">${this.escapeHtml(s.reason)}</td>`;
-                html += '</tr>';
-            }
-            html += '</table>';
-            if (suggestions.reviewRequired.length > MAX) {
-                html += `<div style="padding:8px;opacity:0.6;font-size:11px;">${this.t('showingXofY', lang).replace('{0}', MAX).replace('{1}', suggestions.reviewRequired.length)}</div>`;
-            }
+            // Build tree and render
+            const tree = this.buildStateTree(suggestions.reviewRequired);
+            html += '<div style="background:rgba(0,0,0,0.02);padding:8px;border-radius:4px;">';
+            html += this.renderStateTree(tree, '', lang);
+            html += '</div>';
             html += '</div>';
         }
 
