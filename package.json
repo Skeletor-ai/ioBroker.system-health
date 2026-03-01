@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
+    "test:package": "echo \"Package tests not configured\"",
     "test:e2e": "node test/admin-tab.e2e.js",
     "lint": "eslint .",
     "dev": "dev-server watch",
