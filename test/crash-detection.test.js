@@ -66,6 +66,9 @@ class MockAdapter {
         this.states[id] = { val: value, ack };
     }
 
+    async getStateAsync(id) {
+        return this.states[id] || null;
+    }
     async getStatesAsync(pattern) {
         return this.getForeignStatesAsync(pattern);
     }
@@ -295,5 +298,57 @@ describe('CrashDetection', () => {
             assert.ok(hasProblemsState);
             assert.strictEqual(hasProblemsState.val, true);
         });
+
+    describe('crash history persistence', () => {
+        it('should initialize crashHistory state when it does not exist', async () => {
+            const adapter = new MockAdapter();
+            const crashDetection = new CrashDetection(adapter, 30);
+
+            await crashDetection.loadCrashHistory();
+
+            // Verify object was created
+            assert.ok(adapter.objects['system-health.0.crashHistory']);
+            assert.strictEqual(adapter.objects['system-health.0.crashHistory'].common.type, 'string');
+            assert.strictEqual(adapter.objects['system-health.0.crashHistory'].common.role, 'json');
+
+            // Verify state was initialized with empty object
+            const state = adapter.states['crashHistory'];
+            assert.ok(state, 'crashHistory state should be initialized');
+            assert.strictEqual(state.val, '{}', 'crashHistory should be initialized with empty JSON object');
+            assert.strictEqual(state.ack, true, 'State should be acknowledged');
+        });
+
+        it('should load existing crash history from state', async () => {
+            const adapter = new MockAdapter();
+            const existingHistory = {
+                'test.0': [
+                    { timestamp: '2026-03-01T10:00:00.000Z', category: 'adapter_error' }
+                ]
+            };
+            adapter.states['crashHistory'] = { val: JSON.stringify(existingHistory), ack: true };
+
+            const crashDetection = new CrashDetection(adapter, 30);
+            await crashDetection.loadCrashHistory();
+
+            assert.deepStrictEqual(crashDetection.crashHistory, existingHistory);
+            assert.strictEqual(adapter.log.info.mock.calls.length, 1);
+            assert.ok(adapter.log.info.mock.calls[0].arguments[0].includes('Loaded crash history for 1 adapters'));
+        });
+
+        it('should initialize state when existing state is invalid JSON', async () => {
+            const adapter = new MockAdapter();
+            adapter.states['crashHistory'] = { val: 'invalid-json{', ack: true };
+
+            const crashDetection = new CrashDetection(adapter, 30);
+            await crashDetection.loadCrashHistory();
+
+            // Should reset to empty object
+            assert.deepStrictEqual(crashDetection.crashHistory, {});
+            // Should write empty object to state
+            assert.strictEqual(adapter.states['crashHistory'].val, '{}');
+            assert.strictEqual(adapter.log.warn.mock.calls.length, 1);
+            assert.ok(adapter.log.warn.mock.calls[0].arguments[0].includes('Failed to parse crash history'));
+        });
+    });
     });
 });
