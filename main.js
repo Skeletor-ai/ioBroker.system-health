@@ -453,6 +453,218 @@ class Health extends utils.Adapter {
             native: {},
         });
 
+        await this.setObjectNotExistsAsync('stateInspector.report', {
+            type: 'state',
+            common: {
+                name: 'State inspector report',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.status', {
+            type: 'state',
+            common: {
+                name: 'State inspector status',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+                states: {
+                    idle: 'Idle',
+                    scanning: 'Scanning',
+                    ok: 'OK',
+                    warning: 'Issues detected',
+                },
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.history', {
+            type: 'state',
+            common: {
+                name: 'State inspector scan history',
+                type: 'string',
+                role: 'json',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('stateInspector.scanning', {
+            type: 'state',
+            common: {
+                name: 'State inspector scanning indicator',
+                type: 'boolean',
+                role: 'indicator',
+                read: true,
+                write: false,
+                states: {
+                    'false': 'Not scanning',
+                    'true': 'Scanning'
+                }
+            },
+            native: {},
+        });
+
+        // inspector.* states (detailed breakdown by type)
+        await this.setObjectNotExistsAsync('inspector.status', {
+            type: 'state',
+            common: {
+                name: 'Inspector overall status',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+                states: {
+                    idle: 'Idle',
+                    scanning: 'Scanning',
+                    ok: 'OK',
+                    warning: 'Issues detected',
+                },
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('inspector.timestamp', {
+            type: 'state',
+            common: {
+                name: 'Last inspector scan timestamp',
+                type: 'number',
+                role: 'date',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('inspector.lastScan', {
+            type: 'state',
+            common: {
+                name: 'Last inspector scan (human readable)',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        // inspector.duplicates.*
+        await this.setObjectNotExistsAsync('inspector.duplicates.report', {
+            type: 'state',
+            common: {
+                name: 'Duplicate states report',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('inspector.duplicates.count', {
+            type: 'state',
+            common: {
+                name: 'Number of duplicate state groups',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('inspector.duplicates.lastScan', {
+            type: 'state',
+            common: {
+                name: 'Last duplicate scan timestamp',
+                type: 'number',
+                role: 'date',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        // inspector.orphanedStates.*
+        await this.setObjectNotExistsAsync('inspector.orphanedStates.report', {
+            type: 'state',
+            common: {
+                name: 'Orphaned states report',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('inspector.orphanedStates.count', {
+            type: 'state',
+            common: {
+                name: 'Number of orphaned states',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('inspector.orphanedStates.lastScan', {
+            type: 'state',
+            common: {
+                name: 'Last orphaned states scan timestamp',
+                type: 'number',
+                role: 'date',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        // inspector.staleStates.*
+        await this.setObjectNotExistsAsync('inspector.staleStates.report', {
+            type: 'state',
+            common: {
+                name: 'Stale states report',
+                type: 'string',
+                role: 'text',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('inspector.staleStates.count', {
+            type: 'state',
+            common: {
+                name: 'Number of stale states',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
+        await this.setObjectNotExistsAsync('inspector.staleStates.lastScan', {
+            type: 'state',
+            common: {
+                name: 'Last stale states scan timestamp',
+                type: 'number',
+                role: 'date',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
 
 
         // Initialize inspector summary values to avoid null values in admin UI
@@ -473,6 +685,28 @@ class Health extends utils.Adapter {
                 duplicates: 0
             }
         }, null, 2), true);
+
+        await this.setStateAsync('stateInspector.report', '', true);
+        await this.setStateAsync('stateInspector.status', 'idle', true);
+        await this.setStateAsync('stateInspector.history', '[]', true);
+        await this.setStateAsync('stateInspector.scanning', false, true);
+
+        // Initialize inspector.* values to avoid null values in admin UI
+        await this.setStateAsync('inspector.status', 'idle', true);
+        await this.setStateAsync('inspector.timestamp', Date.now(), true);
+        await this.setStateAsync('inspector.lastScan', '', true);
+
+        await this.setStateAsync('inspector.duplicates.report', '', true);
+        await this.setStateAsync('inspector.duplicates.count', 0, true);
+        await this.setStateAsync('inspector.duplicates.lastScan', Date.now(), true);
+
+        await this.setStateAsync('inspector.orphanedStates.report', '', true);
+        await this.setStateAsync('inspector.orphanedStates.count', 0, true);
+        await this.setStateAsync('inspector.orphanedStates.lastScan', Date.now(), true);
+
+        await this.setStateAsync('inspector.staleStates.report', '', true);
+        await this.setStateAsync('inspector.staleStates.count', 0, true);
+        await this.setStateAsync('inspector.staleStates.lastScan', Date.now(), true);
 
         // Initialize log monitoring values to avoid null values in admin UI
         // before the first log scan has finished.
