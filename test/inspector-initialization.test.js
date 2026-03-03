@@ -79,10 +79,15 @@ test('inspector.* top-level states should be defined', () => {
     assert.ok(hasObjectDefinition('inspector.lastScan'), 'inspector.lastScan object should exist');
 });
 
-test('inspector.* count states should be initialized to 0', () => {
+test('inspector.* count states should be initialized', () => {
+    // After Issue #144 fix: counts are now initialized from aggregated data via _initializeInspectorCount()
+    // instead of being hard-coded to 0. We check that the helper function is defined.
+    assert.ok(mainJsContent.includes('_initializeInspectorCount'), '_initializeInspectorCount helper should exist');
+    assert.ok(mainJsContent.includes('inspector.orphanedStates') && mainJsContent.includes('byCategory'), 'orphanedStates count should be initialized from byCategory');
+    assert.ok(mainJsContent.includes('inspector.staleStates') && mainJsContent.includes('byAdapter'), 'staleStates count should be initialized from byAdapter');
+    
+    // duplicates.count still uses direct initialization (no byCategory/byAdapter aggregation)
     assert.ok(hasStateInitialization('inspector.duplicates.count', 0), 'inspector.duplicates.count should be initialized to 0');
-    assert.ok(hasStateInitialization('inspector.orphanedStates.count', 0), 'inspector.orphanedStates.count should be initialized to 0');
-    assert.ok(hasStateInitialization('inspector.staleStates.count', 0), 'inspector.staleStates.count should be initialized to 0');
 });
 
 test('inspector.status should be initialized to "idle"', () => {
