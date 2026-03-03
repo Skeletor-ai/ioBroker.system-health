@@ -1512,9 +1512,10 @@ class Health extends utils.Adapter {
      * @param {string} path - Current path (for display)
      * @param {string} lang - Language code
      * @param {number} depth - Current depth (for indentation)
+     * @param {string} [category] - Category prefix for unique toggle IDs (to avoid collisions when rendering multiple trees)
      * @returns {string} HTML string
      */
-    renderStateTree(tree, path, lang, depth = 0) {
+    renderStateTree(tree, path, lang, depth = 0, category = '') {
         let html = '';
         const indent = depth * 20;
         const folders = Object.keys(tree).filter(k => k !== '_leaves').sort();
@@ -1526,7 +1527,9 @@ class Health extends utils.Adapter {
             const count = this.countStatesInTree(tree[folder]);
             
             // Generate unique ID for collapse toggle
-            const toggleId = `toggle_${fullPath.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            // Include category prefix to avoid collisions when rendering safeToDelete and reviewRequired trees
+            const categoryPrefix = category ? `${category}_` : '';
+            const toggleId = `toggle_${categoryPrefix}${fullPath.replace(/[^a-zA-Z0-9]/g, '_')}`;
             
             html += `<div style="margin-left:${indent}px;margin-top:4px;">`;
             html += `<div style="cursor:pointer;padding:4px;background:rgba(128,128,128,0.1);border-radius:3px;font-family:monospace;font-size:12px;" onclick="document.getElementById('${toggleId}').style.display = document.getElementById('${toggleId}').style.display === 'none' ? 'block' : 'none';">`;
@@ -1535,7 +1538,7 @@ class Health extends utils.Adapter {
             html += ` <span style="opacity:0.6;font-size:11px;">(${count})</span>`;
             html += `</div>`;
             html += `<div id="${toggleId}" style="display:none;">`;
-            html += this.renderStateTree(tree[folder], fullPath, lang, depth + 1);
+            html += this.renderStateTree(tree[folder], fullPath, lang, depth + 1, category);
             html += `</div>`;
             html += `</div>`;
         }
@@ -1603,10 +1606,10 @@ class Health extends utils.Adapter {
             html += `<h4 style="margin:8px 0;color:#4caf50;">${this.t('safeToDelete', lang)} (${suggestions.safeToDelete.length})</h4>`;
             html += `<p style="font-size:12px;opacity:0.7;margin:4px 0 8px 0;">${this.t('safeToDeleteDescription', lang)}</p>`;
             
-            // Build tree and render
+            // Build tree and render (with category prefix to avoid toggle ID collisions)
             const tree = this.buildStateTree(suggestions.safeToDelete);
             html += '<div style="background:rgba(0,0,0,0.02);padding:8px;border-radius:4px;">';
-            html += this.renderStateTree(tree, '', lang);
+            html += this.renderStateTree(tree, '', lang, 0, 'safeToDelete');
             html += '</div>';
             html += '</div>';
         }
@@ -1617,10 +1620,10 @@ class Health extends utils.Adapter {
             html += `<h4 style="margin:8px 0;color:#ff9800;">${this.t('reviewRequired', lang)} (${suggestions.reviewRequired.length})</h4>`;
             html += `<p style="font-size:12px;opacity:0.7;margin:4px 0 8px 0;">${this.t('reviewRequiredDescription', lang)}</p>`;
             
-            // Build tree and render
+            // Build tree and render (with category prefix to avoid toggle ID collisions)
             const tree = this.buildStateTree(suggestions.reviewRequired);
             html += '<div style="background:rgba(0,0,0,0.02);padding:8px;border-radius:4px;">';
-            html += this.renderStateTree(tree, '', lang);
+            html += this.renderStateTree(tree, '', lang, 0, 'reviewRequired');
             html += '</div>';
             html += '</div>';
         }
