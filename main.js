@@ -701,11 +701,11 @@ class Health extends utils.Adapter {
         await this.setStateAsync('inspector.duplicates.lastScan', Date.now(), true);
 
         await this.setStateAsync('inspector.orphanedStates.report', '', true);
-        await this.setStateAsync('inspector.orphanedStates.count', 0, true);
+        await this._initializeInspectorCount('inspector.orphanedStates', 'byCategory');
         await this.setStateAsync('inspector.orphanedStates.lastScan', Date.now(), true);
 
         await this.setStateAsync('inspector.staleStates.report', '', true);
-        await this.setStateAsync('inspector.staleStates.count', 0, true);
+        await this._initializeInspectorCount('inspector.staleStates', 'byAdapter');
         await this.setStateAsync('inspector.staleStates.lastScan', Date.now(), true);
 
         // Initialize log monitoring values to avoid null values in admin UI
@@ -716,6 +716,41 @@ class Health extends utils.Adapter {
         await this.setStateAsync('logs.status', 'ok', true);
         await this.setStateAsync('logs.timestamp', Date.now(), true);
         await this.setStateAsync('logs.details', JSON.stringify([]), true);
+    }
+
+    /**
+     * Initialize inspector count from aggregated data if available.
+     * Prevents count=0 when aggregated data (byCategory/byAdapter) already exists.
+     * 
+     * @param {string} baseId - Base ID (e.g., 'inspector.orphanedStates')
+     * @param {string} aggregateKey - Aggregate state key (e.g., 'byCategory', 'byAdapter')
+     */
+    async _initializeInspectorCount(baseId, aggregateKey) {
+        try {
+            const aggregateState = await this.getStateAsync(`${baseId}.${aggregateKey}`);
+            
+            if (aggregateState && aggregateState.val) {
+                // Parse aggregated data (JSON object with counts)
+                const aggregateData = JSON.parse(aggregateState.val);
+                
+                // Calculate total count from aggregated values
+                const totalCount = Object.values(aggregateData).reduce((sum, count) => {
+                    return sum + (typeof count === 'number' ? count : 0);
+                }, 0);
+                
+                // Set count to calculated value (not 0!)
+                await this.setStateAsync(`${baseId}.count`, totalCount, true);
+                
+                this.log.debug(`Initialized ${baseId}.count to ${totalCount} from ${aggregateKey}`);
+            } else {
+                // No aggregated data exists yet → initialize to 0
+                await this.setStateAsync(`${baseId}.count`, 0, true);
+            }
+        } catch (err) {
+            // If parsing fails or state doesn't exist, default to 0
+            this.log.debug(`Could not initialize ${baseId}.count from ${aggregateKey}: ${err.message}`);
+            await this.setStateAsync(`${baseId}.count`, 0, true);
+        }
     }
 
     /**
