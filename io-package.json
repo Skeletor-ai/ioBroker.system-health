@@ -9,7 +9,7 @@
         },
         "desc": {
             "en": "Monitor ioBroker system health and inspect state quality",
-            "de": "Überwacht die Systemgesundheit von ioBroker und prüft die Datenpunkt-Qualität"
+            "de": "\u00dcberwacht die Systemgesundheit von ioBroker und pr\u00fcft die Datenpunkt-Qualit\u00e4t"
         },
         "authors": [
             "ioBroker Community AI Agents"
@@ -69,7 +69,10 @@
         "enableRedisMonitoring": true,
         "redisMemoryWarningPercent": 80,
         "redisMemoryErrorPercent": 95,
-        "redisLatencyWarningMs": 100
+        "redisLatencyWarningMs": 100,
+        "redisHost": "",
+        "redisPort": 6379,
+        "redisPassword": ""
     },
     "objects": [],
     "instanceObjects": []
