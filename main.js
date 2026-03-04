@@ -1,6 +1,7 @@
 'use strict';
 
 const utils = require('@iobroker/adapter-core');
+const os = require('os');
 const MemoryMonitor = require('./lib/health-checks/memory-monitor');
 const CpuMonitor = require('./lib/health-checks/cpu-monitor');
 const DiskMonitor = require('./lib/health-checks/disk-monitor');
@@ -685,6 +686,38 @@ class Health extends utils.Adapter {
                 duplicates: 0
             }
         }, null, 2), true);
+
+        // Initialize memory monitoring values to avoid null values in admin UI
+        // before the first memory scan has finished (or when memory monitoring is disabled).
+        const totalMemoryMB = Math.round(os.totalmem() / 1024 / 1024);
+        const freeMemoryMB = Math.round(os.freemem() / 1024 / 1024);
+        const usedMemoryMB = Math.max(0, totalMemoryMB - freeMemoryMB);
+        const usedMemoryPercent = totalMemoryMB > 0
+            ? Math.round((usedMemoryMB / totalMemoryMB) * 10000) / 100
+            : 0;
+        const memoryWarningThresholdMB = this.config.memoryWarningMB || 500;
+        const memoryWarnings = [];
+        let memoryStatus = 'ok';
+
+        if (freeMemoryMB < memoryWarningThresholdMB) {
+            memoryStatus = 'warning';
+            memoryWarnings.push(
+                `Free memory (${freeMemoryMB} MB) is below warning threshold (${memoryWarningThresholdMB} MB)`
+            );
+        }
+
+        if (usedMemoryPercent > 90) {
+            memoryStatus = 'critical';
+            memoryWarnings.push(`Memory usage (${usedMemoryPercent}%) exceeds critical threshold (90%)`);
+        }
+
+        await this.setStateAsync('memory.totalMB', totalMemoryMB, true);
+        await this.setStateAsync('memory.usedMB', usedMemoryMB, true);
+        await this.setStateAsync('memory.freeMB', freeMemoryMB, true);
+        await this.setStateAsync('memory.usedPercent', usedMemoryPercent, true);
+        await this.setStateAsync('memory.status', memoryStatus, true);
+        await this.setStateAsync('memory.leakDetected', false, true);
+        await this.setStateAsync('memory.warnings', memoryWarnings.join('; '), true);
 
         await this.setStateAsync('stateInspector.report', '', true);
         await this.setStateAsync('stateInspector.status', 'idle', true);
