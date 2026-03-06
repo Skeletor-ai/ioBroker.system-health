@@ -979,7 +979,7 @@ class Health extends utils.Adapter {
         await this.setObjectNotExistsAsync('redis.status', {
             type: 'state',
             common: { name: 'Redis status', type: 'string', role: 'text', read: true, write: false,
-                states: { ok: 'OK', warning: 'Warning', error: 'Error' } },
+                states: { ok: 'OK', warning: 'Warning', error: 'Error', skipped: 'Skipped' } },
             native: {},
         });
         await this.setObjectNotExistsAsync('redis.connected', {
@@ -1039,16 +1039,33 @@ class Health extends utils.Adapter {
 
         const result = await this.redisMonitor.check();
 
-        // If Redis is not detected, skip state creation and updates
-        if (result.status === 'skipped') {
-            this.log.debug('Redis monitoring skipped: ' + result.reason);
-            return;
-        }
-
-        // Redis is in use: create states if they don't exist yet
+        // ALWAYS create states (even when Redis is skipped)
+        // This ensures dashboard widgets don't show empty/broken
         await this._createRedisStatesIfNeeded();
 
-        // Update states
+        // If Redis is not detected, initialize with safe defaults
+        if (result.status === 'skipped') {
+            this.log.debug('Redis monitoring skipped: ' + result.reason);
+            
+            // Initialize states with safe defaults
+            await this.setStateAsync('redis.status', 'skipped', true);
+            await this.setStateAsync('redis.connected', false, true);
+            await this.setStateAsync('redis.latencyMs', 0, true);
+            await this.setStateAsync('redis.memoryUsedPercent', 0, true);
+            await this.setStateAsync('redis.memoryUsedBytes', 0, true);
+            await this.setStateAsync('redis.keys', 0, true);
+            await this.setStateAsync('redis.evictedKeys', 0, true);
+            await this.setStateAsync('redis.timestamp', Date.now(), true);
+            await this.setStateAsync('redis.details', JSON.stringify({
+                status: 'skipped',
+                reason: result.reason,
+                timestamp: result.timestamp
+            }, null, 2), true);
+            
+            return; // Early return AFTER state initialization
+        }
+
+        // Update states with real values if Redis IS in use
         await this.setStateAsync('redis.status', result.status, true);
         await this.setStateAsync('redis.connected', result.connection, true);
         await this.setStateAsync('redis.latencyMs', result.latencyMs || 0, true);
