@@ -57,6 +57,33 @@ describe('DiskMonitor', () => {
             assert.ok(adapter.objects['system-health.0.disk.warnings']);
             assert.ok(adapter.objects['system-health.0.disk.trends']);
             assert.ok(adapter.objects['system-health.0.disk.history']);
+            assert.ok(adapter.objects['system-health.0.disk.usedPercent']);
+            assert.ok(adapter.objects['system-health.0.disk.freeMB']);
+            assert.ok(adapter.objects['system-health.0.disk.totalMB']);
+            assert.ok(adapter.objects['system-health.0.disk.usedMB']);
+        });
+
+        it('should define scalar states with correct types and units', async () => {
+            const adapter = new MockAdapter();
+            const diskMonitor = new DiskMonitor(adapter);
+
+            await diskMonitor.createStates();
+
+            const usedPercent = adapter.objects['system-health.0.disk.usedPercent'];
+            assert.strictEqual(usedPercent.common.type, 'number');
+            assert.strictEqual(usedPercent.common.unit, '%');
+
+            const freeMB = adapter.objects['system-health.0.disk.freeMB'];
+            assert.strictEqual(freeMB.common.type, 'number');
+            assert.strictEqual(freeMB.common.unit, 'MB');
+
+            const totalMB = adapter.objects['system-health.0.disk.totalMB'];
+            assert.strictEqual(totalMB.common.type, 'number');
+            assert.strictEqual(totalMB.common.unit, 'MB');
+
+            const usedMB = adapter.objects['system-health.0.disk.usedMB'];
+            assert.strictEqual(usedMB.common.type, 'number');
+            assert.strictEqual(usedMB.common.unit, 'MB');
         });
     });
 
@@ -251,6 +278,41 @@ describe('DiskMonitor', () => {
             const warnings = diskMonitor.generateWarnings(partitions, trends);
             
             assert.strictEqual(warnings, '');
+        });
+    });
+
+    describe('scalar states', () => {
+        it('should set scalar states from root partition during measure', async () => {
+            const adapter = new MockAdapter();
+            const diskMonitor = new DiskMonitor(adapter, { mountPoints: ['/'] });
+
+            // Override getDiskUsage to return controlled data
+            diskMonitor.getDiskUsage = async () => [
+                { filesystem: '/dev/sda1', mountPoint: '/', totalMB: 50000, usedMB: 20000, freeMB: 30000, usedPercent: 40 }
+            ];
+
+            await diskMonitor.createStates();
+            await diskMonitor.measure();
+
+            assert.strictEqual(adapter.states['system-health.0.disk.usedPercent'].val, 40);
+            assert.strictEqual(adapter.states['system-health.0.disk.freeMB'].val, 30000);
+            assert.strictEqual(adapter.states['system-health.0.disk.totalMB'].val, 50000);
+            assert.strictEqual(adapter.states['system-health.0.disk.usedMB'].val, 20000);
+        });
+
+        it('should fall back to first partition if no root partition found', async () => {
+            const adapter = new MockAdapter();
+            const diskMonitor = new DiskMonitor(adapter, { mountPoints: ['/data'] });
+
+            diskMonitor.getDiskUsage = async () => [
+                { filesystem: '/dev/sdb1', mountPoint: '/data', totalMB: 100000, usedMB: 60000, freeMB: 40000, usedPercent: 60 }
+            ];
+
+            await diskMonitor.createStates();
+            await diskMonitor.measure();
+
+            assert.strictEqual(adapter.states['system-health.0.disk.usedPercent'].val, 60);
+            assert.strictEqual(adapter.states['system-health.0.disk.freeMB'].val, 40000);
         });
     });
 
