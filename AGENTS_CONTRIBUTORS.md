@@ -6,7 +6,79 @@ You are an AI agent contributing to ioBroker.system-health, a system health moni
 
 Pick up open GitHub issues and implement them via Pull Requests.
 
-## Workflow
+## Roadmap Enforcement (Phase-by-Phase is Mandatory)
+
+This repository is developed in gated phases. Agents must enforce roadmap order.
+
+### Rules
+1. Agents **MUST** check active phase status before picking issues.
+2. Agents **MUST** verify dependencies are resolved before claiming work.
+3. Agents **MUST ONLY** work on issues labeled `ready`.
+4. Issues for Phase N+1 are **BLOCKED** until Phase N is complete and unlocked.
+
+### Labels and Lifecycle
+- `status:blocked` → Issue cannot be started (waiting for dependency/phase unlock).
+- `ready` → Issue is eligible to be picked by an agent.
+- `in-progress` (optional team label) → Claimed/actively worked.
+- `done`/`closed` → Completed and merged/closed.
+
+**Lifecycle:** `status:blocked` → `ready` → `in-progress` → `complete`.
+
+## Phase Status Check
+
+Before selecting work, identify the currently active phase and milestone.
+
+### Example checks
+```bash
+# List open issues in the active milestone grouped by phase labels (manual review)
+gh issue list --repo Skeletor-ai/ioBroker.system-health --state open --limit 200
+
+# Show all open issues that are still blocked
+gh issue list --repo Skeletor-ai/ioBroker.system-health --state open --label "status:blocked"
+
+# Show all open ready issues (candidate pool)
+gh issue list --repo Skeletor-ai/ioBroker.system-health --state open --label "ready" --assignee ""
+```
+
+## Dependency Management
+
+Do not start an issue if listed dependencies are unresolved.
+
+### Example dependency checks
+```bash
+# Inspect issue body for dependency references (e.g. "depends on #123")
+gh issue view <NUMBER> --repo Skeletor-ai/ioBroker.system-health
+
+# Check dependent issues state before claiming
+for n in <DEP_ISSUE_NUMBERS>; do
+  gh issue view "$n" --repo Skeletor-ai/ioBroker.system-health --json number,state,title,url
+done
+```
+
+If any required dependency is still open/not merged, keep the target issue blocked and do not claim it.
+
+## Issue Lifecycle Enforcement
+
+### Phase unlock check (before claim)
+```bash
+# Candidate issue must be unassigned + ready + open
+gh issue list --repo Skeletor-ai/ioBroker.system-health --label ready --assignee "" --state open
+```
+
+### Milestone/phase completion check (after merge)
+```bash
+# Verify whether active phase is fully completed (no open issues left in the phase label)
+gh issue list --repo Skeletor-ai/ioBroker.system-health --state open --label "phase-<N>-<name>"
+```
+
+When Phase N has no remaining open issues, Phase N+1 can be unlocked by maintainers.
+
+## Workflow (0–7)
+
+### 0. **Check Phase Status (NEW, mandatory)**
+- Confirm active phase/milestone.
+- Confirm target issue phase is currently allowed.
+- If issue is not in active phase, do not pick it.
 
 ### 1. **FIRST: Check Review Feedback on Your Open PRs**
 
@@ -40,86 +112,52 @@ If no unassigned `ready` issues exist, you're done. Check back later.
 
 **Priority:** Always pick `bug` issues before `enhancement` issues. Bugs take precedence.
 
-### 3. Claim an Issue
+### 3. Check Dependencies (NEW, mandatory)
+- Read the issue and verify referenced dependencies are resolved.
+- If dependencies are unresolved, do not claim; ask maintainers to keep/add `status:blocked`.
+
+### 4. Claim an Issue
 Pick the highest-priority unassigned `ready` issue (bugs first, then oldest):
 ```bash
 gh issue edit <NUMBER> --repo Skeletor-ai/ioBroker.system-health --add-assignee @me
 ```
 
-### 4. Understand the Issue
+### 5. Understand & Evaluate the Issue
 Read the full issue description:
 ```bash
 gh issue view <NUMBER> --repo Skeletor-ai/ioBroker.system-health
 ```
 
-### 5. **Review Past PR Feedback and Learnings**
+Before implementation:
+- Review past PR feedback and anti-patterns in this file
+- Study similar implementations in codebase
+- If an enhancement is vague/contradictory, comment concerns first
 
-**Before starting implementation, review past PR feedback and learnings:**
-
-- Review past PR feedback on this repository to see if you've addressed similar issues
-- Look for anti-patterns documented in this file
-- Check similar existing implementations to understand project patterns
-- Study similar modules in the codebase (e.g., other inspectors, other health checks)
-- Look at how other modules solve similar problems
-
-This prevents repeating mistakes and ensures consistency with the established codebase patterns.
-
-### 6. Evaluate the Issue
-Before implementing an enhancement, evaluate whether the feature makes sense in the context of the existing codebase. If the issue is vague, contradicts existing patterns, or would introduce unnecessary complexity, **comment on the issue with your concerns instead of implementing it blindly.** Only proceed if the enhancement is clear and reasonable.
-
-### 7. Create a Branch & Work
+### 6. Create Branch, Implement, and Test
 ```bash
 git checkout main && git pull
 git checkout -b issue-<NUMBER>-short-description
 ```
 
-Implement the change. Follow these rules:
+Implementation rules:
 - JavaScript (ES2020+), no TypeScript
 - Follow existing code patterns
 - Add JSDoc comments to public functions
 - Write tests for new functionality
 - Update README.md if user-facing behavior changes
-- **If you add, remove, or update dependencies in `package.json`, regenerate `package-lock.json` with `npm install` and commit it together with `package.json`.** CI uses `npm ci` which requires an up-to-date lockfile.
-- Run `npm test` before submitting
+- If `package.json` changes, regenerate and commit `package-lock.json`
+- Run `npm test`
 
-### 8. Test with ioBroker Dev-Server
-
-Before submitting a PR, you **must** test your changes on a real ioBroker instance using the dev-server.
-
-#### First-time setup (once per clone):
+Dev-server verification:
 ```bash
-npm install -g @iobroker/dev-server
-cd <your-adapter-directory>
-dev-server setup
-```
-
-#### Run tests on each change:
-```bash
-# Start the dev-server (adapter runs in watch mode, auto-restarts on changes)
 dev-server watch &
-
-# Wait for ioBroker to be ready (~30 seconds), then verify:
-# 1. Adapter starts without errors
-# 2. States are created as expected
-# 3. No crash loops or unhandled exceptions
-
-# Check adapter log for errors:
 cat .dev-server/default/log/iobroker*.log | grep -i "error\|warn" | tail -20
-
-# Stop dev-server when done
 kill %1
 ```
 
-#### What to verify:
-- Adapter starts cleanly without errors
-- All expected states/objects are created in the object tree
-- No unhandled promise rejections or crashes
-- Adapter responds correctly to state changes (if applicable)
-- Log output is clean (no unexpected warnings/errors)
+If `dev-server` setup is unavailable, run `npm test` and document the limitation in PR.
 
-**If `dev-server` is not available or setup fails, at minimum run `npm test` and document in your PR that dev-server testing was not possible.**
-
-### 9. Submit a Pull Request
+### 7. Submit PR and Re-check Phase Completion (NEW)
 ```bash
 git push -u origin issue-<NUMBER>-short-description
 gh pr create --repo Skeletor-ai/ioBroker.system-health \
@@ -127,20 +165,11 @@ gh pr create --repo Skeletor-ai/ioBroker.system-health \
   --body "Closes #<NUMBER>\n\n<description of changes>"
 ```
 
-### 10. Dev-Server Verification (Required)
-Before submitting your PR, you **must** verify it works on a real ioBroker instance using `dev-server watch`. The maintainer reviewer will also run `dev-server watch` to verify functionality before merging. PRs that break basic functionality (adapter start, tab loading, state creation) will be rejected.
+After merge:
+- Check whether current phase is now complete.
+- If complete, notify maintainers so next phase issues can be unlocked.
+- Continue handling review feedback before claiming new work.
 
-### 11. Handle Review Feedback
-**Note:** This step is also Step 1 — always check for feedback on your PRs before picking up new work.
-
-Check if your PR has review comments:
-```bash
-gh pr view <PR-NUMBER> --repo Skeletor-ai/ioBroker.system-health --comments
-```
-Address any requested changes, push updates, and comment when done.
-
-### 12. Move On
-Once your PR is merged (or while waiting for review), you may pick up the next issue.
 Only work on **one issue at a time**.
 
 ## Project Structure
@@ -170,7 +199,7 @@ ioBroker.system-health/
 - Do NOT add npm dependencies without an approved issue
 - Do NOT work on issues that are already assigned to another agent
 - Do NOT create issues — that's for humans
-- Do NOT modify this file (AGENTS_CONTRIBUTORS.md)
+- Do NOT modify this file (AGENTS_CONTRIBUTORS.md) unless an explicit issue asks for it
 
 ## Common Anti-Patterns & Mistakes to Avoid
 
