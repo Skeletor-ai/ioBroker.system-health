@@ -8,304 +8,319 @@
         },
 
         // === Memory Section ===
-        "_memoryHeader": {
+        "_memoryPanel": {
             "newLine": true,
-            "type": "header",
-            "text": "memoryMonitoring",
-            "size": 4
-        },
-        "_memoryStatus": {
-            "newLine": true,
-            "type": "state",
-            "oid": "memory.status",
-            "label": "memoryStatus",
-            "sm": 4
-        },
-        "_memoryUsed": {
-            "type": "state",
-            "oid": "memory.usedMB",
-            "label": "memoryUsed",
-            "sm": 4,
-            "unit": "MB"
-        },
-        "_memoryFree": {
-            "type": "state",
-            "oid": "memory.freeMB",
-            "label": "memoryFree",
-            "sm": 4,
-            "unit": "MB"
-        },
-        "_memoryPercent": {
-            "newLine": true,
-            "type": "state",
-            "oid": "memory.usedPercent",
-            "label": "memoryUsedPercent",
-            "sm": 4,
-            "unit": "%"
-        },
-        "_memoryLeak": {
-            "type": "state",
-            "oid": "memory.leakDetected",
-            "label": "memoryLeakDetected",
-            "sm": 4
-        },
-        "_memoryWarnings": {
-            "type": "state",
-            "oid": "memory.warnings",
-            "label": "memoryWarnings",
-            "sm": 4
+            "type": "panel",
+            "label": "memoryMonitoring",
+            "collapsible": true,
+            "collapsed": false,
+            "items": {
+                "_memoryStatus": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "memory.status",
+                    "label": "memoryStatus",
+                    "sm": 4
+                },
+                "_memoryUsed": {
+                    "type": "state",
+                    "oid": "memory.usedMB",
+                    "label": "memoryUsed",
+                    "sm": 4,
+                    "unit": "MB"
+                },
+                "_memoryFree": {
+                    "type": "state",
+                    "oid": "memory.freeMB",
+                    "label": "memoryFree",
+                    "sm": 4,
+                    "unit": "MB"
+                },
+                "_memoryPercent": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "memory.usedPercent",
+                    "label": "memoryUsedPercent",
+                    "sm": 4,
+                    "unit": "%"
+                },
+                "_memoryLeak": {
+                    "type": "state",
+                    "oid": "memory.leakDetected",
+                    "label": "memoryLeakDetected",
+                    "sm": 4
+                },
+                "_memoryWarnings": {
+                    "type": "state",
+                    "oid": "memory.warnings",
+                    "label": "memoryWarnings",
+                    "sm": 4
+                }
+            }
         },
 
         // === Disk Section ===
-        "_diskHeader": {
+        "_diskPanel": {
             "newLine": true,
-            "type": "header",
-            "text": "diskMonitoring",
-            "size": 4
-        },
-        "_diskStatus": {
-            "newLine": true,
-            "type": "state",
-            "oid": "disk.status",
-            "label": "diskStatus",
-            "sm": 4
-        },
-        "_diskUsed": {
-            "type": "state",
-            "oid": "disk.usedPercent",
-            "label": "diskUsedPercent",
-            "sm": 4,
-            "unit": "%"
-        },
-        "_diskFree": {
-            "type": "state",
-            "oid": "disk.freeMB",
-            "label": "diskFree",
-            "sm": 4,
-            "unit": "MB"
-        },        // === Redis Monitoring Section ===
-        "_redisHeader": {
-            "newLine": true,
-            "type": "header",
-            "text": "redisMonitoring",
-            "size": 4
-        },
-        "_redisStatus": {
-            "newLine": true,
-            "type": "state",
-            "oid": "redis.status",
-            "label": "redisStatus",
-            "sm": 3
-        },
-        "_redisConnected": {
-            "type": "state",
-            "oid": "redis.connected",
-            "label": "redisConnected",
-            "sm": 3
-        },
-        "_redisMemoryUsedPercent": {
-            "type": "state",
-            "oid": "redis.memoryUsedPercent",
-            "label": "redisMemoryUsedPercent",
-            "sm": 3,
-            "unit": "%"
-        },
-        "_redisLatency": {
-            "type": "state",
-            "oid": "redis.latencyMs",
-            "label": "redisLatency",
-            "sm": 3,
-            "unit": "ms"
-        },
-        "_redisMemoryUsedBytes": {
-            "newLine": true,
-            "type": "state",
-            "oid": "redis.memoryUsedBytes",
-            "label": "redisMemoryUsedBytes",
-            "sm": 3,
-            "unit": "bytes"
-        },
-        "_redisKeys": {
-            "type": "state",
-            "oid": "redis.keys",
-            "label": "redisKeys",
-            "sm": 3
-        },
-        "_redisEvictedKeys": {
-            "type": "state",
-            "oid": "redis.evictedKeys",
-            "label": "redisEvictedKeys",
-            "sm": 3
-        },
-        "_redisTimestamp": {
-            "type": "state",
-            "oid": "redis.timestamp",
-            "label": "redisTimestamp",
-            "sm": 3
+            "type": "panel",
+            "label": "diskMonitoring",
+            "collapsible": true,
+            "collapsed": false,
+            "items": {
+                "_diskStatus": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "disk.status",
+                    "label": "diskStatus",
+                    "sm": 4
+                },
+                "_diskUsed": {
+                    "type": "state",
+                    "oid": "disk.usedPercent",
+                    "label": "diskUsedPercent",
+                    "sm": 4,
+                    "unit": "%"
+                },
+                "_diskFree": {
+                    "type": "state",
+                    "oid": "disk.freeMB",
+                    "label": "diskFree",
+                    "sm": 4,
+                    "unit": "MB"
+                }
+            }
         },
 
-
+        // === Redis Monitoring Section ===
+        "_redisPanel": {
+            "newLine": true,
+            "type": "panel",
+            "label": "redisMonitoring",
+            "collapsible": true,
+            "collapsed": true,
+            "items": {
+                "_redisStatus": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "redis.status",
+                    "label": "redisStatus",
+                    "sm": 3
+                },
+                "_redisConnected": {
+                    "type": "state",
+                    "oid": "redis.connected",
+                    "label": "redisConnected",
+                    "sm": 3
+                },
+                "_redisMemoryUsedPercent": {
+                    "type": "state",
+                    "oid": "redis.memoryUsedPercent",
+                    "label": "redisMemoryUsedPercent",
+                    "sm": 3,
+                    "unit": "%"
+                },
+                "_redisLatency": {
+                    "type": "state",
+                    "oid": "redis.latencyMs",
+                    "label": "redisLatency",
+                    "sm": 3,
+                    "unit": "ms"
+                },
+                "_redisMemoryUsedBytes": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "redis.memoryUsedBytes",
+                    "label": "redisMemoryUsedBytes",
+                    "sm": 3,
+                    "unit": "bytes"
+                },
+                "_redisKeys": {
+                    "type": "state",
+                    "oid": "redis.keys",
+                    "label": "redisKeys",
+                    "sm": 3
+                },
+                "_redisEvictedKeys": {
+                    "type": "state",
+                    "oid": "redis.evictedKeys",
+                    "label": "redisEvictedKeys",
+                    "sm": 3
+                },
+                "_redisTimestamp": {
+                    "type": "state",
+                    "oid": "redis.timestamp",
+                    "label": "redisTimestamp",
+                    "sm": 3
+                }
+            }
+        },
 
         // === Log Monitoring Section ===
-        "_logHeader": {
+        "_logPanel": {
             "newLine": true,
-            "type": "header",
-            "text": "logMonitoring",
-            "size": 4
-        },
-        "_logStatus": {
-            "newLine": true,
-            "type": "state",
-            "oid": "logs.status",
-            "label": "logStatus",
-            "sm": 3
-        },
-        "_logTotalErrors": {
-            "type": "state",
-            "oid": "logs.totalErrors",
-            "label": "logTotalErrors",
-            "sm": 3
-        },
-        "_logTotalWarnings": {
-            "type": "state",
-            "oid": "logs.totalWarnings",
-            "label": "logTotalWarnings",
-            "sm": 3
-        },
-        "_logInstanceCount": {
-            "type": "state",
-            "oid": "logs.instanceCount",
-            "label": "logInstanceCount",
-            "sm": 3
-        },
-        "_logDetailsHeader": {
-            "newLine": true,
-            "type": "header",
-            "text": "logDetails",
-            "size": 4
-        },
-        "_logDetails": {
-            "newLine": true,
-            "type": "textSendTo",
-            "container": "html",
-            "command": "getLogDetails",
-            "jsonData": "{\"lang\": \"${systemLang}\"}",
-            "sm": 12
+            "type": "panel",
+            "label": "logMonitoring",
+            "collapsible": true,
+            "collapsed": false,
+            "items": {
+                "_logStatus": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "logs.status",
+                    "label": "logStatus",
+                    "sm": 3
+                },
+                "_logTotalErrors": {
+                    "type": "state",
+                    "oid": "logs.totalErrors",
+                    "label": "logTotalErrors",
+                    "sm": 3
+                },
+                "_logTotalWarnings": {
+                    "type": "state",
+                    "oid": "logs.totalWarnings",
+                    "label": "logTotalWarnings",
+                    "sm": 3
+                },
+                "_logInstanceCount": {
+                    "type": "state",
+                    "oid": "logs.instanceCount",
+                    "label": "logInstanceCount",
+                    "sm": 3
+                },
+                "_logDetailsHeader": {
+                    "newLine": true,
+                    "type": "header",
+                    "text": "logDetails",
+                    "size": 4
+                },
+                "_logDetails": {
+                    "newLine": true,
+                    "type": "textSendTo",
+                    "container": "html",
+                    "command": "getLogDetails",
+                    "jsonData": "{\"lang\": \"${systemLang}\"}",
+                    "sm": 12
+                }
+            }
         },
 
         // === State Inspector Section ===
-        "_inspectorHeader": {
+        "_inspectorPanel": {
             "newLine": true,
-            "type": "header",
-            "text": "stateInspector",
-            "size": 4
-        },
-        "_totalIssues": {
-            "newLine": true,
-            "type": "state",
-            "oid": "stateInspector.totalIssues",
-            "label": "totalIssues",
-            "sm": 3
-        },
-        "_orphanedCount": {
-            "type": "state",
-            "oid": "stateInspector.orphaned",
-            "label": "orphanedStates",
-            "sm": 3
-        },
-        "_staleCount": {
-            "type": "state",
-            "oid": "stateInspector.stale",
-            "label": "staleStates",
-            "sm": 3
-        },
-        "_duplicateCount": {
-            "type": "state",
-            "oid": "stateInspector.duplicates",
-            "label": "duplicateGroups",
-            "sm": 3
-        },
-        "_lastScan": {
-            "newLine": true,
-            "type": "state",
-            "oid": "stateInspector.lastScanFormatted",
-            "label": "lastScan",
-            "sm": 12
-        },
+            "type": "panel",
+            "label": "stateInspector",
+            "collapsible": true,
+            "collapsed": false,
+            "items": {
+                "_totalIssues": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "stateInspector.totalIssues",
+                    "label": "totalIssues",
+                    "sm": 3
+                },
+                "_orphanedCount": {
+                    "type": "state",
+                    "oid": "stateInspector.orphaned",
+                    "label": "orphanedStates",
+                    "sm": 3
+                },
+                "_staleCount": {
+                    "type": "state",
+                    "oid": "stateInspector.stale",
+                    "label": "staleStates",
+                    "sm": 3
+                },
+                "_duplicateCount": {
+                    "type": "state",
+                    "oid": "stateInspector.duplicates",
+                    "label": "duplicateGroups",
+                    "sm": 3
+                },
+                "_lastScan": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "stateInspector.lastScanFormatted",
+                    "label": "lastScan",
+                    "sm": 12
+                },
 
-        // === Detail Lists via sendTo ===
-        "_orphanedDetailsHeader": {
-            "newLine": true,
-            "type": "header",
-            "text": "orphanedDetails",
-            "size": 4
-        },
-        "_orphanedDetails": {
-            "newLine": true,
-            "type": "textSendTo",
-            "container": "html",
-            "command": "getOrphanedDetails",
-            "jsonData": "{\"lang\": \"${systemLang}\"}",
-            "sm": 12
-        },
+                // === Detail Lists via sendTo ===
+                "_orphanedDetailsHeader": {
+                    "newLine": true,
+                    "type": "header",
+                    "text": "orphanedDetails",
+                    "size": 4
+                },
+                "_orphanedDetails": {
+                    "newLine": true,
+                    "type": "textSendTo",
+                    "container": "html",
+                    "command": "getOrphanedDetails",
+                    "jsonData": "{\"lang\": \"${systemLang}\"}",
+                    "sm": 12
+                },
 
-        "_staleDetailsHeader": {
-            "newLine": true,
-            "type": "header",
-            "text": "staleDetails",
-            "size": 4
-        },
-        "_staleDetails": {
-            "newLine": true,
-            "type": "textSendTo",
-            "container": "html",
-            "command": "getStaleDetails",
-            "jsonData": "{\"lang\": \"${systemLang}\"}",
-            "sm": 12
-        },
+                "_staleDetailsHeader": {
+                    "newLine": true,
+                    "type": "header",
+                    "text": "staleDetails",
+                    "size": 4
+                },
+                "_staleDetails": {
+                    "newLine": true,
+                    "type": "textSendTo",
+                    "container": "html",
+                    "command": "getStaleDetails",
+                    "jsonData": "{\"lang\": \"${systemLang}\"}",
+                    "sm": 12
+                },
 
-        "_duplicateDetailsHeader": {
-            "newLine": true,
-            "type": "header",
-            "text": "duplicateDetails",
-            "size": 4
-        },
-        "_duplicateDetails": {
-            "newLine": true,
-            "type": "textSendTo",
-            "container": "html",
-            "command": "getDuplicateDetails",
-            "jsonData": "{\"lang\": \"${systemLang}\"}",
-            "sm": 12
-        },
+                "_duplicateDetailsHeader": {
+                    "newLine": true,
+                    "type": "header",
+                    "text": "duplicateDetails",
+                    "size": 4
+                },
+                "_duplicateDetails": {
+                    "newLine": true,
+                    "type": "textSendTo",
+                    "container": "html",
+                    "command": "getDuplicateDetails",
+                    "jsonData": "{\"lang\": \"${systemLang}\"}",
+                    "sm": 12
+                },
 
-        // === Cleanup Suggestions Section ===
-        "_cleanupHeader": {
-            "newLine": true,
-            "type": "header",
-            "text": "cleanupSuggestions",
-            "size": 3
-        },
-        "_safeToDeleteCount": {
-            "newLine": true,
-            "type": "state",
-            "oid": "stateInspector.safeToDeleteCount",
-            "label": "safeToDelete",
-            "sm": 6
-        },
-        "_reviewRequiredCount": {
-            "type": "state",
-            "oid": "stateInspector.reviewRequiredCount",
-            "label": "reviewRequired",
-            "sm": 6
-        },
-        "_cleanupDetails": {
-            "newLine": true,
-            "type": "textSendTo",
-            "container": "html",
-            "command": "getCleanupSuggestions",
-            "jsonData": "{\"lang\": \"${systemLang}\"}",
-            "sm": 12
+                // === Cleanup Suggestions Section ===
+                "_cleanupHeader": {
+                    "newLine": true,
+                    "type": "header",
+                    "text": "cleanupSuggestions",
+                    "size": 3
+                },
+                "_safeToDeleteCount": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "stateInspector.safeToDeleteCount",
+                    "label": "safeToDelete",
+                    "sm": 6
+                },
+                "_reviewRequiredCount": {
+                    "type": "state",
+                    "oid": "stateInspector.reviewRequiredCount",
+                    "label": "reviewRequired",
+                    "sm": 6
+                },
+                "_cleanupDetails": {
+                    "newLine": true,
+                    "type": "textSendTo",
+                    "container": "html",
+                    "command": "getCleanupSuggestions",
+                    "jsonData": "{\"lang\": \"${systemLang}\"}",
+                    "sm": 12
+                }
+            }
         }
     }
 }
