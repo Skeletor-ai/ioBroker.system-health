@@ -253,6 +253,18 @@ class Health extends utils.Adapter {
             native: {},
         });
 
+        await this.setObjectNotExistsAsync('memory.timestamp', {
+            type: 'state',
+            common: {
+                name: 'Memory check timestamp',
+                type: 'number',
+                role: 'value.time',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+
         // Log monitoring states
         await this.setObjectNotExistsAsync('logs.totalErrors', {
             type: 'state',
@@ -867,6 +879,7 @@ class Health extends utils.Adapter {
 
         const allMessages = [...result.warnings, ...result.critical];
         await this.setStateAsync('memory.warnings', allMessages.join('; '), true);
+        await this.setStateAsync('memory.timestamp', Date.now(), true);
 
         // Log results
         if (result.status === 'critical') {
