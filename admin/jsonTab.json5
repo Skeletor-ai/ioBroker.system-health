@@ -55,6 +55,13 @@
                     "oid": "memory.warnings",
                     "label": "memoryWarnings",
                     "sm": 4
+                },
+                "_memoryTimestamp": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "memory.timestamp",
+                    "label": "lastCheck",
+                    "sm": 12
                 }
             }
         },
@@ -87,6 +94,13 @@
                     "label": "diskFree",
                     "sm": 4,
                     "unit": "MB"
+                },
+                "_diskTimestamp": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "disk.timestamp",
+                    "label": "lastCheck",
+                    "sm": 12
                 }
             }
         },
@@ -200,6 +214,13 @@
                     "container": "html",
                     "command": "getLogDetails",
                     "jsonData": "{\"lang\": \"${systemLang}\"}",
+                    "sm": 12
+                },
+                "_logsTimestamp": {
+                    "newLine": true,
+                    "type": "state",
+                    "oid": "logs.timestamp",
+                    "label": "lastCheck",
                     "sm": 12
                 }
             }
