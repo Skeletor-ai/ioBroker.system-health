@@ -55,8 +55,7 @@
                     "oid": "memory.warnings",
                     "label": "memoryWarnings",
                     "sm": 4
-                }
-                ,,
+                },
                 "_memoryTimestamp": {
                     "newLine": true,
                     "type": "state",
@@ -95,8 +94,7 @@
                     "label": "diskFree",
                     "sm": 4,
                     "unit": "MB"
-                }
-                ,,
+                },
                 "_diskTimestamp": {
                     "newLine": true,
                     "type": "state",
@@ -217,8 +215,7 @@
                     "command": "getLogDetails",
                     "jsonData": "{\"lang\": \"${systemLang}\"}",
                     "sm": 12
-                }
-                ,,
+                },
                 "_logsTimestamp": {
                     "newLine": true,
                     "type": "state",
