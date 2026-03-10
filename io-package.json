@@ -72,5 +72,38 @@
         "redisLatencyWarningMs": 100
     },
     "objects": [],
-    "instanceObjects": []
+    "instanceObjects": [
+        {
+            "_id": "memory.timestamp",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Last memory check timestamp",
+                    "de": "Zeitstempel der letzten Speicherprüfung"
+                },
+                "type": "number",
+                "role": "value.time",
+                "read": true,
+                "write": false,
+                "unit": "ms"
+            },
+            "native": {}
+        },
+        {
+            "_id": "disk.timestamp",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Last disk check timestamp",
+                    "de": "Zeitstempel der letzten Festplattenprüfung"
+                },
+                "type": "number",
+                "role": "value.time",
+                "read": true,
+                "write": false,
+                "unit": "ms"
+            },
+            "native": {}
+        }
+    ]
 }
